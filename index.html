@@ -6,7 +6,6 @@
 <title>Distribuidora Jazmín - Online Shop</title>
 
 <style>
-
 body{
     margin:0;
     font-family:Arial, sans-serif;
@@ -24,50 +23,11 @@ header{
     border-bottom:2px solid gold;
 }
 
-header img{
-    width:50px;
-}
+header img{ width:50px; }
 
-header h1{
-    margin:0;
-    font-size:20px;
-}
+header h1{ margin:0; font-size:20px; }
 
-.carrito-float{
-    position:fixed;
-    right:15px;
-    bottom:170px;
-    background:#25D366;
-    width:55px;
-    height:55px;
-    border-radius:50%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:22px;
-    color:white;
-    cursor:pointer;
-    box-shadow:0 0 15px rgba(0,0,0,0.5);
-}
-
-.carrito-contador{
-    position:absolute;
-    top:-5px;
-    right:-5px;
-    background:red;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    font-size:12px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-.container{
-    padding:20px;
-    padding-bottom:220px;
-}
+.container{ padding:20px; padding-bottom:220px; }
 
 input{
     width:100%;
@@ -103,36 +63,12 @@ input{
     margin-bottom:15px;
     border-radius:12px;
     border:1px solid gold;
-    animation:fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0;transform:translateY(5px);}
-    to{opacity:1;transform:translateY(0);}
-}
-
-.producto img{
-    width:100%;
-    max-height:150px;
-    object-fit:contain;
-    margin-bottom:10px;
 }
 
 .precio{
     font-size:18px;
     font-weight:bold;
     color:gold;
-}
-
-.control{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    margin:10px 0;
-}
-
-.control button{
-    padding:5px 10px;
 }
 
 .boton-agregar{
@@ -143,11 +79,41 @@ input{
     border-radius:8px;
     font-weight:bold;
     color:white;
+    margin-top:10px;
+}
+
+.carrito-float{
+    position:fixed;
+    right:15px;
+    bottom:170px;
+    background:#25D366;
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.carrito-contador{
+    position:absolute;
+    top:-5px;
+    right:-5px;
+    background:red;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    font-size:12px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
 .barra-carrito{
     position:fixed;
-    bottom:-170px;
+    bottom:-200px;
     left:0;
     width:100%;
     background:black;
@@ -156,46 +122,16 @@ input{
     transition:0.3s;
 }
 
-.barra-carrito.activo{
-    bottom:0;
-}
-
-.handle{
-    width:60px;
-    height:6px;
-    background:gold;
-    border-radius:10px;
-    margin:0 auto 10px auto;
-    cursor:pointer;
-}
-
-.carrito-lista{
-    max-height:130px;
-    overflow-y:auto;
-    margin-bottom:10px;
-    font-size:13px;
-}
-
-.item-carrito{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:5px;
-}
-
-.total-linea{
-    display:flex;
-    justify-content:space-between;
-    font-weight:bold;
-}
+.barra-carrito.activo{ bottom:0; }
 
 footer{
     text-align:center;
     padding:20px;
     border-top:1px solid gold;
 }
-
 </style>
 </head>
+
 <body>
 
 <header>
@@ -223,22 +159,88 @@ footer{
 </div>
 
 <div class="barra-carrito" id="barraCarrito">
-<div class="handle" onclick="toggleCarrito()"></div>
-<div class="carrito-lista" id="listaCarrito"></div>
-<div class="total-linea">
-<span>Total:</span>
-<span id="totalGeneral">$0</span>
-</div>
-<button onclick="enviarPedido()" style="margin-top:10px;background:#25D366;border:none;padding:10px;width:100%;border-radius:8px;color:white;font-weight:bold;">
-Enviar pedido por WhatsApp
-</button>
+<div id="listaCarrito"></div>
+<div style="margin-top:10px;font-weight:bold;">Total: $<span id="totalGeneral">0</span></div>
+<button onclick="enviarPedido()" class="boton-agregar">Enviar pedido por WhatsApp</button>
 </div>
 
 <script>
 
-/* TODO TU SCRIPT SIGUE IGUAL DESDE ACÁ */
+let carrito = [];
+
+const productos = [
+{nombre:"Coca Cola 2L", precio:2500, categoria:"bebidas"},
+{nombre:"Agua 1.5L", precio:900, categoria:"bebidas"},
+{nombre:"Arroz 1kg", precio:1200, categoria:"almacen"},
+{nombre:"Azúcar 1kg", precio:1100, categoria:"almacen"}
+];
+
+function mostrarProductos(){
+    document.getElementById("bebidas").innerHTML="";
+    document.getElementById("almacen").innerHTML="";
+    
+    productos.forEach(p=>{
+        const div=document.createElement("div");
+        div.className="producto";
+        div.innerHTML=`
+            <h3>${p.nombre}</h3>
+            <div class="precio">$${p.precio}</div>
+            <button class="boton-agregar" onclick="agregarAlCarrito('${p.nombre}',${p.precio})">Agregar</button>
+        `;
+        document.getElementById(p.categoria).appendChild(div);
+    });
+}
+
+function agregarAlCarrito(nombre,precio){
+    carrito.push({nombre,precio});
+    actualizarCarrito();
+}
+
+function actualizarCarrito(){
+    let lista="";
+    let total=0;
+    carrito.forEach(item=>{
+        lista+=`<div>${item.nombre} - $${item.precio}</div>`;
+        total+=item.precio;
+    });
+    document.getElementById("listaCarrito").innerHTML=lista;
+    document.getElementById("totalGeneral").innerText=total;
+    document.getElementById("contador").innerText=carrito.length;
+}
+
+function toggleCarrito(){
+    document.getElementById("barraCarrito").classList.toggle("activo");
+}
+
+function enviarPedido(){
+    if(carrito.length===0){
+        alert("El carrito está vacío");
+        return;
+    }
+    let mensaje="Hola! Quiero hacer este pedido:%0A";
+    carrito.forEach(item=>{
+        mensaje+=`${item.nombre} - $${item.precio}%0A`;
+    });
+    window.open(`https://wa.me/5493425695340?text=${mensaje}`);
+}
+
+function buscarProducto(){
+    let filtro=document.getElementById("buscador").value.toLowerCase();
+    document.querySelectorAll(".producto").forEach(p=>{
+        p.style.display=p.innerText.toLowerCase().includes(filtro)?"block":"none";
+    });
+}
+
+document.querySelectorAll(".acordeon").forEach(btn=>{
+    btn.addEventListener("click",function(){
+        let panel=this.nextElementSibling;
+        panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
+    });
+});
+
+mostrarProductos();
 
 </script>
 
 </body>
-  </html>
+</html>
