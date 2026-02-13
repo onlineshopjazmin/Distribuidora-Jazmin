@@ -3,138 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribuidora Jazmin - Online Shop</title>
+<title>Distribuidora Jazmín</title>
 
 <style>
+*{box-sizing:border-box;}
 body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#0f0f0f;
-    color:white;
+margin:0;
+font-family:Arial, sans-serif;
+background:#0f0f0f;
+color:white;
 }
 
 header{
-    background:black;
-    color:gold;
-    display:flex;
-    align-items:center;
-    gap:15px;
-    padding:15px 20px;
-    border-bottom:2px solid gold;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+background:#181818;
+padding:15px;
+font-size:20px;
+font-weight:bold;
+box-shadow:0 2px 10px rgba(0,0,0,0.5);
 }
 
-header img{ width:50px; }
-header h1{ margin:0; font-size:20px; }
+header img{
+width:40px;
+height:40px;
+border-radius:50%;
+}
 
-.container{
-    padding:20px;
-    padding-bottom:120px;
+nav{
+display:flex;
+justify-content:center;
+gap:10px;
+padding:10px;
+}
+
+nav button{
+padding:8px 15px;
+border:none;
+border-radius:20px;
+background:#2a2a2a;
+color:white;
+cursor:pointer;
+transition:0.3s;
+}
+
+nav button.activo{
+background:#00c853;
 }
 
 input{
-    width:100%;
-    padding:12px;
-    border-radius:8px;
-    border:none;
-    margin-bottom:20px;
-    font-size:16px;
+display:block;
+margin:10px auto;
+padding:10px;
+width:90%;
+max-width:400px;
+border-radius:20px;
+border:none;
+outline:none;
+background:#1f1f1f;
+color:white;
 }
 
-.producto{
-    background:#1a1a1a;
-    padding:15px;
-    margin-bottom:15px;
-    border-radius:12px;
-    border:1px solid gold;
+.productos{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:12px;
+padding:12px;
+padding-bottom:120px;
+}
+
+.card{
+background:#1c1c1c;
+padding:12px;
+border-radius:15px;
+text-align:center;
+box-shadow:0 4px 10px rgba(0,0,0,0.4);
+transition:0.2s;
+}
+
+.card:hover{
+transform:scale(1.03);
+}
+
+.card h4{
+margin:5px 0;
+font-size:14px;
+min-height:40px;
 }
 
 .precio{
-    font-size:18px;
-    font-weight:bold;
-    color:gold;
+color:#00e676;
+font-weight:bold;
+margin:5px 0;
 }
 
-.boton{
-    background:#25D366;
-    border:none;
-    padding:8px 12px;
-    border-radius:6px;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
+.estado{
+font-size:12px;
+margin-bottom:6px;
 }
 
-.carrito-boton{
-    position:fixed;
-    right:15px;
-    bottom:15px;
-    background:#25D366;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-weight:bold;
-    cursor:pointer;
+.sin{color:#ff5252;}
+.disp{color:#00e676;}
+
+.controles{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:10px;
 }
 
-.contador{
-    position:absolute;
-    top:-5px;
-    right:-5px;
-    background:red;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    font-size:12px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+.controles button{
+width:30px;
+height:30px;
+border:none;
+border-radius:50%;
+background:#00c853;
+color:white;
+font-size:18px;
+cursor:pointer;
 }
 
-.barra-carrito{
-    position:fixed;
-    bottom:-100%;
-    left:0;
-    width:100%;
-    max-height:70%;
-    background:black;
-    border-top:2px solid gold;
-    padding:15px;
-    transition:0.3s;
-    display:flex;
-    flex-direction:column;
+#carrito{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#1a1a1a;
+border-top-left-radius:25px;
+border-top-right-radius:25px;
+box-shadow:0 -4px 20px rgba(0,0,0,0.7);
+transform:translateY(65%);
+transition:transform 0.4s ease;
 }
 
-.barra-carrito.activo{
-    bottom:0;
+#carrito.abierto{
+transform:translateY(0);
 }
 
-.lista-carrito{
-    overflow-y:auto;
-    flex:1;
-    margin-bottom:10px;
+.marca{
+width:50px;
+height:6px;
+background:#777;
+border-radius:10px;
+margin:10px auto;
+cursor:pointer;
 }
 
-.item-carrito{
-    border-bottom:1px solid #333;
-    padding:8px 0;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+.carrito-contenido{
+max-height:250px;
+overflow-y:auto;
+padding:10px;
+font-size:14px;
 }
 
-.cantidad{
-    display:flex;
-    gap:8px;
-    align-items:center;
+.total{
+text-align:center;
+font-weight:bold;
+margin:10px;
+font-size:16px;
 }
 
-footer{
-    text-align:center;
-    padding:20px;
-    border-top:1px solid gold;
+.whatsapp{
+display:block;
+background:#25d366;
+color:white;
+text-align:center;
+padding:12px;
+margin:10px;
+border-radius:20px;
+text-decoration:none;
+font-weight:bold;
 }
 </style>
 </head>
@@ -143,151 +183,132 @@ footer{
 
 <header>
 <img src="https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg">
-<h1>Distribuidora Jazmin</h1>
+Distribuidora Jazmín
 </header>
 
-<div class="container">
+<nav>
+<button id="btnBebidas" class="activo">Bebidas</button>
+<button id="btnAlmacen">Almacén</button>
+</nav>
 
-<input type="text" id="buscador" placeholder="Buscar producto..." onkeyup="buscarProducto()">
+<input type="text" id="buscador" placeholder="Buscar producto...">
 
-<div id="productos"></div>
+<div class="productos" id="productos"></div>
 
-</div>
-
-<footer>Copyright 2026 Distribuidora Jazmin</footer>
-
-<div class="carrito-boton" onclick="toggleCarrito()">
-Car
-<div class="contador" id="contador">0</div>
-</div>
-
-<div class="barra-carrito" id="barraCarrito">
-<div class="lista-carrito" id="listaCarrito"></div>
-
-<div style="font-weight:bold;">Total: $<span id="total">0</span></div>
-
-<button class="boton" onclick="enviarPedido()">Enviar pedido por WhatsApp</button>
+<div id="carrito">
+<div class="marca" onclick="toggleCarrito()"></div>
+<div class="carrito-contenido" id="listaCarrito"></div>
+<div class="total" id="total"></div>
+<a id="enviar" class="whatsapp" target="_blank">
+Enviar pedido por WhatsApp
+</a>
 </div>
 
 <script>
+const SHEET_ID="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
+const BEBIDAS="Bebidas";
+const ALMACEN="Almacen";
+let categoriaActual=BEBIDAS;
+let productos=[];
+let carrito=JSON.parse(localStorage.getItem("carrito"))||{};
+let abierto=false;
 
-const productos = [
-{nombre:"Coca Cola 2L", precio:2500},
-{nombre:"Agua 1.5L", precio:900},
-{nombre:"Arroz 1kg", precio:1200},
-{nombre:"Azucar 1kg", precio:1100}
-];
-
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-function guardarCarrito(){
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+async function cargarDatos(){
+const url=`https://opensheet.elk.sh/${SHEET_ID}/${categoriaActual}`;
+const res=await fetch(url);
+productos=await res.json();
+mostrarProductos();
 }
 
 function mostrarProductos(){
-    const contenedor = document.getElementById("productos");
-    contenedor.innerHTML="";
-    productos.forEach(p=>{
-        contenedor.innerHTML+=`
-        <div class="producto">
-            <h3>${p.nombre}</h3>
-            <div class="precio">$${formatoPrecio(p.precio)}</div>
-            <button class="boton" onclick="agregar('${p.nombre}',${p.precio})">Agregar</button>
-        </div>`;
-    });
+const cont=document.getElementById("productos");
+cont.innerHTML="";
+const filtro=document.getElementById("buscador").value.toLowerCase();
+
+productos
+.filter(p=>p.producto && p.producto.toLowerCase().includes(filtro))
+.forEach(p=>{
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`
+<h4>${p.producto}</h4>
+<div class="precio">$${Number(p.precio).toLocaleString()}</div>
+<div class="estado ${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado}</div>
+<div class="controles">
+<button onclick="cambiar('${p.codigo}',-1)">-</button>
+<span>${carrito[p.codigo]?.cantidad||0}</span>
+<button onclick="cambiar('${p.codigo}',1)">+</button>
+</div>
+`;
+cont.appendChild(div);
+});
 }
 
-function agregar(nombre,precio){
-    const existe = carrito.find(p=>p.nombre===nombre);
-    if(existe){
-        existe.cantidad++;
-    }else{
-        carrito.push({nombre,precio,cantidad:1});
-    }
-    actualizarCarrito();
+function cambiar(codigo,valor){
+const prod=productos.find(p=>p.codigo===codigo);
+if(!prod) return;
+
+if(!carrito[codigo]){
+carrito[codigo]={...prod,cantidad:0};
 }
 
-function cambiarCantidad(nombre,accion){
-    const item = carrito.find(p=>p.nombre===nombre);
-    if(!item) return;
+carrito[codigo].cantidad+=valor;
+if(carrito[codigo].cantidad<=0){
+delete carrito[codigo];
+}
 
-    if(accion==="sumar") item.cantidad++;
-    if(accion==="restar") item.cantidad--;
-
-    if(item.cantidad<=0){
-        carrito = carrito.filter(p=>p.nombre!==nombre);
-    }
-
-    actualizarCarrito();
+localStorage.setItem("carrito",JSON.stringify(carrito));
+mostrarProductos();
+actualizarCarrito();
 }
 
 function actualizarCarrito(){
-    const lista = document.getElementById("listaCarrito");
-    lista.innerHTML="";
-    let total=0;
-    let cantidadTotal=0;
+const lista=document.getElementById("listaCarrito");
+lista.innerHTML="";
+let total=0;
+let mensaje="Hola, quiero pedir:%0A";
 
-    carrito.forEach(item=>{
-        total+=item.precio*item.cantidad;
-        cantidadTotal+=item.cantidad;
+Object.values(carrito).forEach(p=>{
+const subtotal=p.cantidad*Number(p.precio);
+total+=subtotal;
 
-        lista.innerHTML+=`
-        <div class="item-carrito">
-            <div>
-                ${item.nombre}<br>
-                $${formatoPrecio(item.precio*item.cantidad)}
-            </div>
-            <div class="cantidad">
-                <button class="boton" onclick="cambiarCantidad('${item.nombre}','restar')">-</button>
-                ${item.cantidad}
-                <button class="boton" onclick="cambiarCantidad('${item.nombre}','sumar')">+</button>
-            </div>
-        </div>`;
-    });
+lista.innerHTML+=`
+<div>${p.producto} x${p.cantidad} - $${subtotal.toLocaleString()}</div>
+`;
 
-    document.getElementById("total").innerText=formatoPrecio(total);
-    document.getElementById("contador").innerText=cantidadTotal;
+mensaje+=`${p.producto} x${p.cantidad} - $${subtotal}%0A`;
+});
 
-    guardarCarrito();
-}
+document.getElementById("total").innerText="Total: $"+total.toLocaleString();
+mensaje+=`%0ATotal: $${total}`;
 
-function formatoPrecio(num){
-    return num.toLocaleString("es-AR");
+document.getElementById("enviar").href=
+`https://wa.me/5493425695340?text=${mensaje}`;
 }
 
 function toggleCarrito(){
-    document.getElementById("barraCarrito").classList.toggle("activo");
+abierto=!abierto;
+document.getElementById("carrito").classList.toggle("abierto");
 }
 
-function enviarPedido(){
-    if(carrito.length===0){
-        alert("El carrito esta vacio");
-        return;
-    }
+document.getElementById("buscador").addEventListener("input",mostrarProductos);
 
-    let mensaje="Hola, quiero hacer el siguiente pedido:%0A%0A";
-    let total=0;
+document.getElementById("btnBebidas").onclick=()=>{
+categoriaActual=BEBIDAS;
+btnBebidas.classList.add("activo");
+btnAlmacen.classList.remove("activo");
+cargarDatos();
+};
 
-    carrito.forEach(item=>{
-        mensaje+=`${item.cantidad} x ${item.nombre} - $${formatoPrecio(item.precio*item.cantidad)}%0A`;
-        total+=item.precio*item.cantidad;
-    });
+document.getElementById("btnAlmacen").onclick=()=>{
+categoriaActual=ALMACEN;
+btnAlmacen.classList.add("activo");
+btnBebidas.classList.remove("activo");
+cargarDatos();
+};
 
-    mensaje+=`%0ATotal: $${formatoPrecio(total)}`;
-
-    window.open(`https://wa.me/5493425695340?text=${mensaje}`);
-}
-
-function buscarProducto(){
-    let filtro=document.getElementById("buscador").value.toLowerCase();
-    document.querySelectorAll(".producto").forEach(p=>{
-        p.style.display=p.innerText.toLowerCase().includes(filtro)?"block":"none";
-    });
-}
-
-mostrarProductos();
+cargarDatos();
 actualizarCarrito();
-
 </script>
 
 </body>
