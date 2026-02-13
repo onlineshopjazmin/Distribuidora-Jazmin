@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribuidora Jazmín - Online Shop</title>
+<title>Distribuidora Jazmin - Online Shop</title>
 
 <style>
 body{
@@ -24,10 +24,12 @@ header{
 }
 
 header img{ width:50px; }
-
 header h1{ margin:0; font-size:20px; }
 
-.container{ padding:20px; padding-bottom:220px; }
+.container{
+    padding:20px;
+    padding-bottom:120px;
+}
 
 input{
     width:100%;
@@ -36,25 +38,6 @@ input{
     border:none;
     margin-bottom:20px;
     font-size:16px;
-}
-
-.acordeon{
-    background:#111;
-    color:gold;
-    padding:15px;
-    border:1px solid gold;
-    width:100%;
-    text-align:left;
-    font-size:18px;
-    border-radius:8px;
-    margin-bottom:10px;
-    cursor:pointer;
-}
-
-.panel{
-    max-height:0;
-    overflow:hidden;
-    transition:0.4s ease;
 }
 
 .producto{
@@ -71,33 +54,32 @@ input{
     color:gold;
 }
 
-.boton-agregar{
+.boton{
     background:#25D366;
     border:none;
-    padding:10px;
-    width:100%;
-    border-radius:8px;
-    font-weight:bold;
+    padding:8px 12px;
+    border-radius:6px;
     color:white;
-    margin-top:10px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-.carrito-float{
+.carrito-boton{
     position:fixed;
     right:15px;
-    bottom:170px;
+    bottom:15px;
     background:#25D366;
-    width:55px;
-    height:55px;
+    width:60px;
+    height:60px;
     border-radius:50%;
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:22px;
+    font-weight:bold;
     cursor:pointer;
 }
 
-.carrito-contador{
+.contador{
     position:absolute;
     top:-5px;
     right:-5px;
@@ -113,16 +95,41 @@ input{
 
 .barra-carrito{
     position:fixed;
-    bottom:-200px;
+    bottom:-100%;
     left:0;
     width:100%;
+    max-height:70%;
     background:black;
     border-top:2px solid gold;
     padding:15px;
     transition:0.3s;
+    display:flex;
+    flex-direction:column;
 }
 
-.barra-carrito.activo{ bottom:0; }
+.barra-carrito.activo{
+    bottom:0;
+}
+
+.lista-carrito{
+    overflow-y:auto;
+    flex:1;
+    margin-bottom:10px;
+}
+
+.item-carrito{
+    border-bottom:1px solid #333;
+    padding:8px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.cantidad{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
 
 footer{
     text-align:center;
@@ -135,77 +142,117 @@ footer{
 <body>
 
 <header>
-<img src="https://cdn-icons-png.flaticon.com/512/891/891462.png">
-<h1>Distribuidora Jazmín - Online Shop</h1>
+<img src="https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg">
+<h1>Distribuidora Jazmin</h1>
 </header>
 
 <div class="container">
 
 <input type="text" id="buscador" placeholder="Buscar producto..." onkeyup="buscarProducto()">
 
-<button class="acordeon">Bebidas ▼</button>
-<div class="panel"><div id="bebidas"></div></div>
-
-<button class="acordeon">Almacén ▼</button>
-<div class="panel"><div id="almacen"></div></div>
+<div id="productos"></div>
 
 </div>
 
-<footer>© 2026 Distribuidora Jazmín</footer>
+<footer>Copyright 2026 Distribuidora Jazmin</footer>
 
-<div class="carrito-float" onclick="toggleCarrito()">
-🛒
-<div class="carrito-contador" id="contador">0</div>
+<div class="carrito-boton" onclick="toggleCarrito()">
+Car
+<div class="contador" id="contador">0</div>
 </div>
 
 <div class="barra-carrito" id="barraCarrito">
-<div id="listaCarrito"></div>
-<div style="margin-top:10px;font-weight:bold;">Total: $<span id="totalGeneral">0</span></div>
-<button onclick="enviarPedido()" class="boton-agregar">Enviar pedido por WhatsApp</button>
+<div class="lista-carrito" id="listaCarrito"></div>
+
+<div style="font-weight:bold;">Total: $<span id="total">0</span></div>
+
+<button class="boton" onclick="enviarPedido()">Enviar pedido por WhatsApp</button>
 </div>
 
 <script>
 
-let carrito = [];
-
 const productos = [
-{nombre:"Coca Cola 2L", precio:2500, categoria:"bebidas"},
-{nombre:"Agua 1.5L", precio:900, categoria:"bebidas"},
-{nombre:"Arroz 1kg", precio:1200, categoria:"almacen"},
-{nombre:"Azúcar 1kg", precio:1100, categoria:"almacen"}
+{nombre:"Coca Cola 2L", precio:2500},
+{nombre:"Agua 1.5L", precio:900},
+{nombre:"Arroz 1kg", precio:1200},
+{nombre:"Azucar 1kg", precio:1100}
 ];
 
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+
+function guardarCarrito(){
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
 function mostrarProductos(){
-    document.getElementById("bebidas").innerHTML="";
-    document.getElementById("almacen").innerHTML="";
-    
+    const contenedor = document.getElementById("productos");
+    contenedor.innerHTML="";
     productos.forEach(p=>{
-        const div=document.createElement("div");
-        div.className="producto";
-        div.innerHTML=`
+        contenedor.innerHTML+=`
+        <div class="producto">
             <h3>${p.nombre}</h3>
-            <div class="precio">$${p.precio}</div>
-            <button class="boton-agregar" onclick="agregarAlCarrito('${p.nombre}',${p.precio})">Agregar</button>
-        `;
-        document.getElementById(p.categoria).appendChild(div);
+            <div class="precio">$${formatoPrecio(p.precio)}</div>
+            <button class="boton" onclick="agregar('${p.nombre}',${p.precio})">Agregar</button>
+        </div>`;
     });
 }
 
-function agregarAlCarrito(nombre,precio){
-    carrito.push({nombre,precio});
+function agregar(nombre,precio){
+    const existe = carrito.find(p=>p.nombre===nombre);
+    if(existe){
+        existe.cantidad++;
+    }else{
+        carrito.push({nombre,precio,cantidad:1});
+    }
+    actualizarCarrito();
+}
+
+function cambiarCantidad(nombre,accion){
+    const item = carrito.find(p=>p.nombre===nombre);
+    if(!item) return;
+
+    if(accion==="sumar") item.cantidad++;
+    if(accion==="restar") item.cantidad--;
+
+    if(item.cantidad<=0){
+        carrito = carrito.filter(p=>p.nombre!==nombre);
+    }
+
     actualizarCarrito();
 }
 
 function actualizarCarrito(){
-    let lista="";
+    const lista = document.getElementById("listaCarrito");
+    lista.innerHTML="";
     let total=0;
+    let cantidadTotal=0;
+
     carrito.forEach(item=>{
-        lista+=`<div>${item.nombre} - $${item.precio}</div>`;
-        total+=item.precio;
+        total+=item.precio*item.cantidad;
+        cantidadTotal+=item.cantidad;
+
+        lista.innerHTML+=`
+        <div class="item-carrito">
+            <div>
+                ${item.nombre}<br>
+                $${formatoPrecio(item.precio*item.cantidad)}
+            </div>
+            <div class="cantidad">
+                <button class="boton" onclick="cambiarCantidad('${item.nombre}','restar')">-</button>
+                ${item.cantidad}
+                <button class="boton" onclick="cambiarCantidad('${item.nombre}','sumar')">+</button>
+            </div>
+        </div>`;
     });
-    document.getElementById("listaCarrito").innerHTML=lista;
-    document.getElementById("totalGeneral").innerText=total;
-    document.getElementById("contador").innerText=carrito.length;
+
+    document.getElementById("total").innerText=formatoPrecio(total);
+    document.getElementById("contador").innerText=cantidadTotal;
+
+    guardarCarrito();
+}
+
+function formatoPrecio(num){
+    return num.toLocaleString("es-AR");
 }
 
 function toggleCarrito(){
@@ -214,13 +261,20 @@ function toggleCarrito(){
 
 function enviarPedido(){
     if(carrito.length===0){
-        alert("El carrito está vacío");
+        alert("El carrito esta vacio");
         return;
     }
-    let mensaje="Hola! Quiero hacer este pedido:%0A";
+
+    let mensaje="Hola, quiero hacer el siguiente pedido:%0A%0A";
+    let total=0;
+
     carrito.forEach(item=>{
-        mensaje+=`${item.nombre} - $${item.precio}%0A`;
+        mensaje+=`${item.cantidad} x ${item.nombre} - $${formatoPrecio(item.precio*item.cantidad)}%0A`;
+        total+=item.precio*item.cantidad;
     });
+
+    mensaje+=`%0ATotal: $${formatoPrecio(total)}`;
+
     window.open(`https://wa.me/5493425695340?text=${mensaje}`);
 }
 
@@ -231,14 +285,8 @@ function buscarProducto(){
     });
 }
 
-document.querySelectorAll(".acordeon").forEach(btn=>{
-    btn.addEventListener("click",function(){
-        let panel=this.nextElementSibling;
-        panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
-    });
-});
-
 mostrarProductos();
+actualizarCarrito();
 
 </script>
 
