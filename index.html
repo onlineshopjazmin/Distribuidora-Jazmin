@@ -245,6 +245,8 @@ const BEBIDAS="bebidas";
 const ALMACEN="almacen";
 
 let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
+const MINIMO_DOMICILIO = 40000; // mínimo para envío gratis
+const COSTO_DOMICILIO = 1500; // costo si es menor al mínimo
 
 async function cargarDatos(){
 const url1=`https://opensheet.elk.sh/${SHEET_ID}/${BEBIDAS}`;
@@ -304,13 +306,18 @@ lista.innerHTML+=`<div>${p.producto} x${p.cantidad} - $${sub.toLocaleString()}</
 document.getElementById("contador").innerText=cant;
 
 let envio=0;
-if(total<40000 && total>0) envio=1500;
+const tipo=document.getElementById("tipoEntrega").value;
+if(tipo==="domicilio" && total<MINIMO_DOMICILIO && total>0){
+envio=COSTO_DOMICILIO;
+document.getElementById("envioInfo").innerText=`💸 Costo adicional por envío: $${envio.toLocaleString()}`;
+}else if(total>=MINIMO_DOMICILIO){
+document.getElementById("envioInfo").innerText="🚚 Envío GRATIS";
+}else{
+document.getElementById("envioInfo").innerText="";
+}
 
 let totalFinal=total+envio;
-
 document.getElementById("total").innerText="Total: $"+totalFinal.toLocaleString();
-document.getElementById("envioInfo").innerText=
-total>=40000?"🚚 Envío GRATIS":"";
 
 let senia=Math.round(totalFinal*0.5);
 document.getElementById("senia").innerText="Seña 50%: $"+senia.toLocaleString();
@@ -324,12 +331,9 @@ function confirmarPedido(){
 if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
 
 let tipo=document.getElementById("tipoEntrega").value;
-let direccion=document.getElementById("direccion").value;
+let direccion=document.getElementById("direccion").value.trim();
 
-if(tipo==="domicilio" && direccion.trim()===""){
-alert("Ingresá dirección");
-return;
-}
+if(tipo==="domicilio" && direccion===""){alert("Ingresá dirección");return;}
 
 let totalTexto=document.getElementById("total").innerText;
 let totalNumero=parseInt(totalTexto.replace(/\D/g,""));
@@ -337,13 +341,14 @@ let senia=Math.round(totalNumero*0.5);
 
 let fecha=new Date().toLocaleString("es-AR");
 
+// 📄 Generar PDF
 const doc=new jsPDF();
 doc.setFontSize(16);
-doc.text("Distribuidora Jazmín",20,20);
+doc.text("📄 Distribuidora Jazmín",20,20);
 doc.setFontSize(11);
 doc.text("Fecha: "+fecha,20,30);
-
 let y=40;
+
 Object.values(carrito).forEach(p=>{
 let sub=Number(p.precio)*p.cantidad;
 doc.text(`${p.producto} x${p.cantidad} - $${sub}`,20,y);
@@ -352,21 +357,25 @@ y+=8;
 
 doc.text("Total: $"+totalNumero,20,y+10);
 doc.text("Seña 50%: $"+senia,20,y+20);
-doc.text("Alias: jazminonlineshop",20,y+30);
-doc.text("CVU: 0000003100054608688074",20,y+40);
+if(tipo==="domicilio") doc.text("Domicilio: "+direccion,20,y+30);
+doc.text("Alias Mercado Pago: jazminonlineshop",20,y+40);
+doc.text("CVU: 0000003100054608688074",20,y+50);
 
-doc.save("Pedido_Jazmin.pdf");
+doc.save("Pedido_Distribuidora_Jazmin.pdf");
 
-let mensaje="Hola quiero hacer este pedido:%0A";
+// 💬 Mensaje WhatsApp indicando que descargó PDF
+let mensaje="Hola, te envío mi pedido. Ya descargué el comprobante PDF, ahora te lo paso.%0A";
 Object.values(carrito).forEach(p=>{
 let sub=Number(p.precio)*p.cantidad;
 mensaje+=`- ${p.producto} x${p.cantidad} - $${sub}%0A`;
 });
 mensaje+=`%0ATotal: $${totalNumero}%0ASeña 50%: $${senia}%0AFecha: ${fecha}`;
+if(tipo==="domicilio") mensaje+=`%0ADomicilio: ${direccion}`;
 
 window.open(`https://wa.me/5493425695340?text=${mensaje}`);
 }
 
+// Eventos
 document.getElementById("buscador").addEventListener("input",mostrar);
 btnBebidas.onclick=()=>{productos=productosBebidas;btnBebidas.classList.add("activo");btnAlmacen.classList.remove("activo");mostrar();}
 btnAlmacen.onclick=()=>{productos=productosAlmacen;btnAlmacen.classList.add("activo");btnBebidas.classList.remove("activo");mostrar();}
