@@ -6,11 +6,10 @@
 <title>Distribuidora Jazmín</title>
 
 <style>
-*{box-sizing:border-box;}
+*{box-sizing:border-box;margin:0;padding:0;}
 body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
+font-family:Arial, sans-serif;
+background:#0f0f0f;
 color:white;
 overflow-x:hidden;
 }
@@ -18,215 +17,149 @@ overflow-x:hidden;
 header{
 display:flex;
 align-items:center;
-justify-content:center;
 gap:10px;
-background:#111;
 padding:15px;
-font-size:22px;
-font-weight:bold;
-box-shadow:0 4px 20px rgba(0,0,0,0.6);
-position:relative;
+background:#181818;
+position:sticky;
+top:0;
+z-index:1000;
 }
 
 header img{
-width:45px;
-height:45px;
+width:40px;
+height:40px;
 border-radius:50%;
 }
 
-#contador{
-position:absolute;
-right:20px;
-top:15px;
-background:#00e676;
-color:black;
-font-weight:bold;
-width:25px;
-height:25px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-nav{
-display:flex;
-justify-content:center;
-gap:12px;
-padding:12px;
-}
-
-nav button{
-padding:10px 18px;
-border:none;
-border-radius:25px;
-background:#2c2c2c;
-color:white;
-cursor:pointer;
-}
-
-nav button.activo{
-background:#00e676;
-color:black;
-font-weight:bold;
-}
-
-input{
-display:block;
-margin:10px auto;
-padding:10px;
-width:90%;
-max-width:400px;
-border-radius:25px;
-border:none;
-background:#1f1f1f;
-color:white;
+h1{
+font-size:20px;
 }
 
 .productos{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-gap:15px;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
 padding:15px;
-padding-bottom:250px;
+padding-bottom:120px;
 }
 
 .card{
-background:#1b1b1b;
-padding:15px;
-border-radius:20px;
-text-align:center;
-box-shadow:0 6px 20px rgba(0,0,0,0.5);
+background:#1f1f1f;
+padding:12px;
+border-radius:12px;
+box-shadow:0 0 10px rgba(0,0,0,0.4);
+transition:0.2s;
 }
 
-.precio{
-color:#00e676;
+.card:hover{
+transform:scale(1.02);
+}
+
+.card h3{
+font-size:15px;
+margin-bottom:6px;
+}
+
+.card p{
+font-size:14px;
+margin-bottom:6px;
+}
+
+.btn{
+background:#25D366;
+border:none;
+padding:6px 10px;
+border-radius:8px;
+color:white;
+cursor:pointer;
 font-weight:bold;
 }
 
-.estado{
-font-size:12px;
-margin:6px 0;
-}
-
-.sin{color:#ff5252;}
-.disp{color:#00e676;}
-
-.controles{
-display:flex;
-justify-content:center;
-align-items:center;
-gap:10px;
-}
-
-.controles button{
-width:32px;
-height:32px;
-border:none;
-border-radius:50%;
-background:#00e676;
-color:black;
-font-size:18px;
-cursor:pointer;
-}
-
-/* 🔥 BOTÓN FLOTANTE */
-#btnFlotante{
-position:fixed;
-bottom:20px;
-right:20px;
-width:60px;
-height:60px;
-border-radius:50%;
-border:none;
-background:#00e676;
-color:black;
-font-size:26px;
-box-shadow:0 8px 25px rgba(0,0,0,0.7);
-cursor:pointer;
-z-index:1100;
-transition:0.3s;
-}
-
-#btnFlotante:hover{
-transform:scale(1.1);
-}
-
-/* 🔥 CARRITO */
-#carrito{
+.carrito-bar{
 position:fixed;
 bottom:0;
 left:0;
-right:0;
-height:75vh;
-background:#111;
-border-top-left-radius:30px;
-border-top-right-radius:30px;
-box-shadow:
-0 -30px 80px rgba(0,0,0,0.95),
-0 -5px 20px rgba(0,0,0,0.6);
-transform:translateY(90%);
-transition:transform 0.45s cubic-bezier(.22,1,.36,1),
-box-shadow 0.4s ease;
-display:flex;
-flex-direction:column;
-z-index:1000;
-}
-
-/* 🔥 EFECTO COMBINADO PRO */
-#carrito.abierto{
-transform:translateY(0);
-box-shadow:
-0 -30px 80px rgba(0,0,0,0.95),
-0 -5px 20px rgba(0,0,0,0.6),
-0 0 25px rgba(0,230,118,0.6);
-}
-
-.marca{
-width:60px;
-height:6px;
-background:#666;
-border-radius:10px;
-margin:12px auto 5px auto;
-cursor:pointer;
-}
-
-.carrito-header{
-text-align:center;
-font-weight:bold;
-padding:5px;
-}
-
-.toggle-btn{
-background:#00e676;
-border:none;
-padding:5px 15px;
-border-radius:20px;
-cursor:pointer;
-font-size:13px;
-}
-
-.carrito-contenido{
-flex:1;
-overflow-y:auto;
+width:100%;
+background:#181818;
 padding:15px;
+box-shadow:0 -5px 15px rgba(0,0,0,0.5);
+display:flex;
+justify-content:space-between;
+align-items:center;
+z-index:2000;
 }
 
-.carrito-footer{
-background:#1a1a1a;
-padding:10px;
-border-top:1px solid #333;
-text-align:center;
+.carrito-bar button{
+background:#ff9800;
+border:none;
+padding:10px 15px;
+border-radius:8px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.modal{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+justify-content:center;
+align-items:flex-end;
+z-index:3000;
+}
+
+.modal-content{
+background:#1f1f1f;
+width:100%;
+max-height:90%;
+border-radius:20px 20px 0 0;
+padding:20px;
+overflow-y:auto;
+}
+
+.modal h2{
+margin-bottom:10px;
+}
+
+input, select{
+width:100%;
+padding:8px;
+margin:6px 0;
+border-radius:6px;
+border:none;
+}
+
+.resumen-item{
+display:flex;
+justify-content:space-between;
+margin:6px 0;
 }
 
 .total{
+font-size:18px;
+margin-top:10px;
 font-weight:bold;
-margin-bottom:5px;
 }
 
-.gratis{
-color:#00e676;
-font-size:13px;
+.confirmar{
+background:#25D366;
+width:100%;
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:10px;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.close{
+background:red;
+margin-top:10px;
 }
 </style>
 </head>
@@ -235,151 +168,122 @@ font-size:13px;
 
 <header>
 <img src="https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg">
-Distribuidora Jazmín
-<div id="contador">0</div>
+<h1>Distribuidora Jazmín</h1>
 </header>
 
-<nav>
-<button id="btnBebidas" class="activo">Bebidas</button>
-<button id="btnAlmacen">Almacén</button>
-</nav>
-
-<input type="text" id="buscador" placeholder="Buscar producto...">
 <div class="productos" id="productos"></div>
 
-<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
-
-<div id="carrito">
-<div class="marca" onclick="toggleCarrito()"></div>
-
-<div class="carrito-header">
-Mi Pedido
-<button class="toggle-btn" id="toggleTexto" onclick="toggleCarrito()">Abrir</button>
+<div class="carrito-bar">
+<div>Total: $<span id="total">0</span></div>
+<button onclick="abrirCarrito()">Ver Pedido</button>
 </div>
 
-<div class="carrito-contenido" id="listaCarrito"></div>
+<div class="modal" id="modal">
+<div class="modal-content">
+<h2>Resumen del Pedido</h2>
+<div id="listaCarrito"></div>
 
-<div class="carrito-footer">
-<div class="total" id="total"></div>
-<div id="envioGratis" class="gratis"></div>
+<div class="total">Total: $<span id="totalModal">0</span></div>
+<div class="total">Seña 50%: $<span id="senia">0</span></div>
+
+<select id="tipoEntrega">
+<option value="domicilio">🚚 Entrega a domicilio</option>
+<option value="coordinado">🤝 Entrega coordinada</option>
+</select>
+
+<input type="text" id="direccion" placeholder="Dirección (obligatorio si es domicilio)">
+
+<button class="confirmar" onclick="confirmarPedido()">Confirmar Pedido</button>
+<button class="confirmar close" onclick="cerrarCarrito()">Cerrar</button>
 </div>
 </div>
 
 <script>
-const SHEET_ID="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
-const BEBIDAS="bebidas";
-const ALMACEN="almacen";
+const productos = [
+{nombre:"Coca Cola 2L",precio:1500},
+{nombre:"Fanta 2L",precio:1400},
+{nombre:"Arroz 1kg",precio:900},
+{nombre:"Aceite 900ml",precio:1800}
+];
 
-let productosBebidas=[];
-let productosAlmacen=[];
-let productos=[];
-let todos=[];
-let carrito={};
+let carrito=[];
 
-async function cargarDatos(){
-try{
-const url1=`https://opensheet.elk.sh/${SHEET_ID}/${BEBIDAS}`;
-const url2=`https://opensheet.elk.sh/${SHEET_ID}/${ALMACEN}`;
-const [r1,r2]=await Promise.all([fetch(url1),fetch(url2)]);
-productosBebidas=await r1.json();
-productosAlmacen=await r2.json();
-todos=[...productosBebidas,...productosAlmacen];
-productos=productosBebidas;
-mostrar();
-}catch(e){
-alert("Error cargando productos. Revisá nombre de hojas o permisos.");
-}
-}
-
-function mostrar(){
+function renderProductos(){
 const cont=document.getElementById("productos");
 cont.innerHTML="";
-const filtro=document.getElementById("buscador").value.toLowerCase();
-let lista=filtro?todos.filter(p=>p.producto?.toLowerCase().includes(filtro)):productos;
-
-lista.forEach(p=>{
-if(!p.codigo||!p.producto||!p.precio) return;
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`
-<h4>${p.producto}</h4>
-<div class="precio">$${Number(p.precio).toLocaleString()}</div>
-<div class="estado ${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
-<div class="controles">
-<button onclick="cambiar('${p.codigo}',-1)">-</button>
-<span>${carrito[p.codigo]?.cantidad||0}</span>
-<button onclick="cambiar('${p.codigo}',1)">+</button>
-</div>`;
-cont.appendChild(div);
+productos.forEach((p,i)=>{
+cont.innerHTML+=`
+<div class="card">
+<h3>${p.nombre}</h3>
+<p>$${p.precio}</p>
+<button class="btn" onclick="agregar(${i})">Agregar</button>
+</div>
+`;
 });
 }
 
-function cambiar(codigo,val){
-const prod=todos.find(p=>p.codigo===codigo);
-if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
-carrito[codigo].cantidad+=val;
-if(carrito[codigo].cantidad<=0) delete carrito[codigo];
-actualizar();
-mostrar();
+function agregar(i){
+carrito.push(productos[i]);
+actualizarTotal();
 }
 
-function actualizar(){
-let total=0;
-let cant=0;
-const lista=document.getElementById("listaCarrito");
+function actualizarTotal(){
+let total=carrito.reduce((acc,p)=>acc+p.precio,0);
+document.getElementById("total").innerText=total;
+}
+
+function abrirCarrito(){
+document.getElementById("modal").style.display="flex";
+renderCarrito();
+}
+
+function cerrarCarrito(){
+document.getElementById("modal").style.display="none";
+}
+
+function renderCarrito(){
+let lista=document.getElementById("listaCarrito");
 lista.innerHTML="";
-
-Object.values(carrito).forEach(p=>{
-const precio=Number(p.precio);
-const sub=precio*p.cantidad;
-total+=sub;
-cant+=p.cantidad;
-lista.innerHTML+=`<div>${p.producto} x${p.cantidad} - $${sub.toLocaleString()}</div>`;
+let total=0;
+carrito.forEach((p,index)=>{
+total+=p.precio;
+lista.innerHTML+=`
+<div class="resumen-item">
+<span>${p.nombre}</span>
+<span>$${p.precio}</span>
+</div>
+`;
 });
-
-document.getElementById("contador").innerText=cant;
-
-let envio=0;
-if(total<40000 && total>0){envio=1500;}
-let totalFinal=total+envio;
-
-document.getElementById("total").innerText="Total: $"+totalFinal.toLocaleString();
-
-if(total>=40000){
-document.getElementById("envioGratis").innerText="🚚 Envío GRATIS por superar $40.000";
-}else{
-document.getElementById("envioGratis").innerText="";
-}
+document.getElementById("totalModal").innerText=total;
+document.getElementById("senia").innerText=Math.round(total*0.5);
 }
 
-function toggleCarrito(){
-const carritoPanel=document.getElementById("carrito");
-const texto=document.getElementById("toggleTexto");
-carritoPanel.classList.toggle("abierto");
-if(carritoPanel.classList.contains("abierto")){
-texto.innerText="Cerrar";
-}else{
-texto.innerText="Abrir";
-}
+function confirmarPedido(){
+let tipo=document.getElementById("tipoEntrega").value;
+let direccion=document.getElementById("direccion").value;
+
+if(tipo==="domicilio" && direccion===""){
+alert("Debes ingresar dirección para envío a domicilio");
+return;
 }
 
-document.getElementById("buscador").addEventListener("input",mostrar);
+let total=document.getElementById("totalModal").innerText;
+let senia=document.getElementById("senia").innerText;
 
-btnBebidas.onclick=()=>{
-productos=productosBebidas;
-btnBebidas.classList.add("activo");
-btnAlmacen.classList.remove("activo");
-mostrar();
-};
+let mensaje="Hola quiero hacer este pedido:%0A";
+carrito.forEach(p=>{
+mensaje+=`- ${p.nombre} $${p.precio}%0A`;
+});
+mensaje+=`%0ATotal: $${total}%0ASeña 50%: $${senia}%0A`;
+mensaje+=`Entrega: ${tipo}%0A`;
+if(tipo==="domicilio") mensaje+=`Dirección: ${direccion}%0A`;
+mensaje+=`%0AAlias: jazminonlineshop%0ACVU: 0000003100054608688074`;
 
-btnAlmacen.onclick=()=>{
-productos=productosAlmacen;
-btnAlmacen.classList.add("activo");
-btnBebidas.classList.remove("activo");
-mostrar();
-};
+window.open(`https://wa.me/5493425695340?text=${mensaje}`);
+}
 
-cargarDatos();
+renderProductos();
 </script>
+
 </body>
-</html>
+  </html>
