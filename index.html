@@ -483,7 +483,7 @@ function mostrar(){
       <div class="${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
       <div class="controles">
         <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
-        <span>${carrito[p.codigo]?.cantidad||0}</span>
+        <span id="cantidad-${p.codigo}">${carrito[p.codigo]?.cantidad || 0}</span>
         <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
       </div>
     `;
@@ -553,7 +553,9 @@ document.getElementById("total").innerHTML =
   "Total productos: $" + total.toLocaleString();
   
 // 🔹 Calcular envío
+const envioDiv = document.getElementById("envioInfo");
 const envio = calcularEnvio(total);
+
 let totalConEnvio = total;
 
 if(envio.ok){
@@ -656,24 +658,50 @@ function calcularPrecioFinal(producto,cantidad){
 ========================= */
 
 function calcularEnvio(total){
-  const zona = document.getElementById("zona")?.value;
+  const zonaElement = document.getElementById("zona");
+const tipoEntregaElement = document.getElementById("tipoEntrega");
+
+const zona = zonaElement ? zonaElement.value : "";
+const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
+  if(tipoEntrega === "coordinado"){
+    return {
+      ok: true,
+      mensaje: "Entrega coordinada (sin costo de envío)",
+      costo: 0
+    };
+  }
+
   let costoEnvio = 0;
   let mensaje = "";
 
   if(zona === "santafe"){
-    costoEnvio = 1500; // Santa Fe Capital
-    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+    if(total >= 100000){
+      mensaje = "🎉 Envío GRATIS en Santa Fe por superar $100.000";
+      costoEnvio = 0;
+    }else{
+      costoEnvio = 2000;
+      mensaje = "Costo de envío Santa Fe: $" + costoEnvio.toLocaleString();
+    }
+
   } else if(zona === "centro"){
-    costoEnvio = 2000; // Zona Centro
-    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+    costoEnvio = 2500;
+    mensaje = "Costo de envío Zona Centro: $" + costoEnvio.toLocaleString();
+
   } else if(zona === "santotome"){
-    costoEnvio = 4000; // Santo Tomé
-    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+    if(total >= 120000){
+      mensaje = "🎉 Envío GRATIS en Santo Tomé por superar $120.000";
+      costoEnvio = 0;
+    }else{
+      costoEnvio = 6000;
+      mensaje = "Costo de envío Santo Tomé: $" + costoEnvio.toLocaleString();
+    }
+
   } else {
     mensaje = "Seleccione una zona para calcular envío";
+    return { ok:false, mensaje, costo:0 };
   }
 
-  return {ok: zona ? true : false, mensaje, costo: costoEnvio};
+  return { ok:true, mensaje, costo:costoEnvio };
 }
 
 /* =========================
@@ -725,59 +753,47 @@ function generarPDFProfesional(totalFinal){
 ========================= */
 
 function enviarWhatsApp(totalFinal){
+
+  const pagoElement = document.getElementById("tipoPagoExtra");
+  const tipoPago = pagoElement ? pagoElement.value : "100";
+
   let mensaje="Hola Distribuidora Jazmín 👋%0A";
   mensaje+="Quiero confirmar el siguiente pedido:%0A%0A";
 
-  // Listado de productos
   Object.values(carrito).forEach(p=>{
     mensaje+=`- ${p.producto} x${p.cantidad}%0A`;
   });
 
   mensaje+=`%0ATotal (incluyendo envío): $${totalFinal.toLocaleString()}%0A`;
-  mensaje+=`Forma de pago: ${document.getElementById("tipoPagoExtra")?.value==="50"?"Seña 50%":"Pago total"}%0A`;
+  mensaje+=`Forma de pago: ${
+    tipoPago==="50" ? "Seña 50%" : "Pago total"
+  }%0A`;
+
   mensaje+="Muchas gracias!";
 
   window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${mensaje}`);
 }
+
+
 /* =========================
    📲 BOTÓN FLOTANTE WHATSAPP
 ========================= */
 
-// Función que calcula el total incluyendo envío y abre WhatsApp
 function whatsappFlotante(){
-  // 1️⃣ Recalcular total de productos
+
   let total = 0;
-  Object.values(carrito).forEach(p => {
+  Object.values(carrito).forEach(p=>{
     total += Number(p.precio) * p.cantidad;
   });
 
-  // 2️⃣ Calcular envío según zona seleccionada
   const envio = calcularEnvio(total);
   let totalConEnvio = total;
+
   if(envio.ok){
     totalConEnvio += envio.costo;
   }
 
-  // 3️⃣ Llamar a la función que genera el mensaje y abre WhatsApp
   enviarWhatsApp(totalConEnvio);
-}
-
-// Función que construye el mensaje y abre WhatsApp
-function enviarWhatsApp(totalFinal){
-  let mensaje = "Hola Distribuidora Jazmín 👋%0A";
-  mensaje += "Quiero confirmar el siguiente pedido:%0A%0A";
-
-  // Listado de productos del carrito
-  Object.values(carrito).forEach(p => {
-    mensaje += `- ${p.producto} x${p.cantidad}%0A`;
-  });
-
-  mensaje += `%0ATotal (incluyendo envío): $${totalFinal.toLocaleString()}%0A`;
-  mensaje += `Forma de pago: ${document.getElementById("tipoPagoExtra")?.value === "50" ? "Seña 50%" : "Pago total"}%0A`;
-  mensaje += "Muchas gracias!";
-
-  // Abrir WhatsApp en nueva pestaña con el mensaje
-  window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${mensaje}`);
 }
 
 /* =========================
