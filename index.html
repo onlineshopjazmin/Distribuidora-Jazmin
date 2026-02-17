@@ -3,324 +3,795 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribuidora Jazmín</title>
-
+<title>Distribuidora Jazmín - Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Arial, sans-serif;background:#f4f4f4;}
-
+:root{
+--primary:#00e676;
+--dark:#111;
+--bg:#1c1c1c;
+--card:#1b1b1b;
+--green:#28a745;
+--red:#dc3545;
+--white:#fff;
+}
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:var(--bg);
+color:var(--white);
+}
 header{
-background:#111;
-color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+background:var(--dark);
 padding:15px;
-text-align:center;
 font-size:22px;
 font-weight:bold;
-}
-
-.buscador{
-padding:15px;
-background:white;
-display:flex;
-gap:10px;
-position:sticky;
-top:0;
-z-index:10;
-}
-
-.buscador input{
-flex:1;
-padding:10px;
-border:1px solid #ccc;
-border-radius:6px;
-}
-
-button{
-padding:10px 15px;
-border:none;
-border-radius:6px;
+position:relative;
 cursor:pointer;
+}
+header img{
+width:45px;
+height:45px;
+border-radius:50%;
+}
+#contador{
+position:absolute;
+right:20px;
+top:15px;
+background:var(--primary);
+color:black;
+font-weight:bold;
+width:25px;
+height:25px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+nav{
+display:flex;
+justify-content:center;
+gap:12px;
+padding:12px;
+}
+nav button{
+padding:10px 18px;
+border:none;
+border-radius:25px;
+background:#2c2c2c;
+color:white;
+cursor:pointer;
+}
+nav button.activo{
+background:var(--primary);
+color:black;
 font-weight:bold;
 }
-
-.btn-carrito{
-background:#25D366;
-color:white;
-}
-
-.categorias{
-display:flex;
-gap:10px;
+input, select{
+display:block;
+margin:10px auto;
 padding:10px;
-background:white;
-}
-
-.categorias button{
-flex:1;
-background:#333;
+width:90%;
+max-width:400px;
+border-radius:25px;
+border:none;
+background:#1f1f1f;
 color:white;
 }
-
 .productos{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-gap:12px;
+gap:15px;
 padding:15px;
+padding-bottom:300px;
 }
-
 .card{
-background:white;
-padding:10px;
-border-radius:8px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
+background:var(--card);
+padding:15px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 6px 20px rgba(0,0,0,0.5);
+}
+.precio{color:var(--primary);font-weight:bold;}
+.sin{color:var(--red);}
+.disp{color:var(--green);}
+.controles{
 display:flex;
-flex-direction:column;
-gap:6px;
+justify-content:center;
+align-items:center;
+gap:10px;
+margin-top:8px;
 }
-
-.card h4{
-font-size:14px;
+.controles button{
+width:32px;
+height:32px;
+border:none;
+border-radius:50%;
+background:var(--primary);
+color:black;
+font-size:18px;
+cursor:pointer;
 }
-
-.precio{
-font-weight:bold;
-color:#000;
+#btnFlotante{
+position:fixed;
+bottom:20px;
+right:20px;
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+background:var(--primary);
+color:black;
+font-size:26px;
+box-shadow:0 8px 25px rgba(0,0,0,0.7);
+cursor:pointer;
+z-index:1100;
 }
-
-.mayorista{
-color:#d10000;
-font-size:13px;
-}
-
-.stock{
-font-size:12px;
-color:gray;
-}
-
-.card button{
-background:#111;
-color:white;
-}
-
 #carrito{
 position:fixed;
-right:-400px;
-top:0;
-width:350px;
-height:100%;
-background:white;
-box-shadow:-3px 0 10px rgba(0,0,0,0.2);
-padding:15px;
-transition:0.3s;
-overflow:auto;
-z-index:20;
-}
-
-#carrito.abierto{
+bottom:0;
+left:0;
 right:0;
+height:80vh;
+background:var(--dark);
+border-top-left-radius:30px;
+border-top-right-radius:30px;
+box-shadow:0 -30px 80px rgba(0,0,0,0.95);
+transform:translateY(90%);
+transition:0.4s;
+display:flex;
+flex-direction:column;
+z-index:1000;
 }
-
+#carrito.abierto{transform:translateY(0);}
+.barra-arrastre{
+width:60px;
+height:6px;
+background:#555;
+border-radius:10px;
+margin:10px auto;
+cursor:pointer;
+}
+.carrito-contenido{
+flex:1;
+overflow-y:auto;
+padding:15px;
+}
 .item-carrito{
 display:flex;
 justify-content:space-between;
-margin-bottom:10px;
+align-items:center;
+margin-bottom:8px;
 font-size:14px;
 }
-
-.total{
-font-weight:bold;
-margin-top:10px;
+.carrito-footer{
+background:#1a1a1a;
+padding:12px;
+border-top:1px solid #333;
 }
-
-.formulario{
-margin-top:15px;
-display:flex;
-flex-direction:column;
-gap:8px;
-}
-
-.formulario input{
+.carrito-footer select,
+.carrito-footer input{
+width:100%;
+margin-top:8px;
 padding:8px;
-border:1px solid #ccc;
-border-radius:5px;
+border-radius:8px;
+border:none;
 }
-
-.btn-cerrar{
-background:#999;
+.carrito-footer button{
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:20px;
+background:var(--primary);
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+.control-carrito{
+display:flex;
+align-items:center;
+gap:6px;
+}
+.btn-cant{
+width:28px;
+height:28px;
+border:none;
+border-radius:50%;
+background:var(--primary);
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+.cant-num{
+min-width:20px;
+text-align:center;
+font-weight:bold;
+}
+.btn-eliminar{
+background:var(--red);
+border:none;
+border-radius:50%;
+width:28px;
+height:28px;
 color:white;
-margin-bottom:10px;
+font-weight:bold;
+cursor:pointer;
+}
+/* Panel Admin */
+.panel-admin{
+position:fixed;
+top:0;left:0;width:100%;height:100%;
+background:#111;color:white;
+display:none;
+padding:40px;
+z-index:2000;
+overflow:auto;
+}
+.admin-box{
+background:#222;padding:30px;border-radius:15px;max-width:600px;margin:auto;
+}
+.admin-box h2{margin-top:0;}
+.close-admin{
+background:var(--red);
+margin-top:20px;
+}
+.producto{
+  transition: all .25s ease;
 }
 
-.btn-confirmar{
-background:#25D366;
-color:white;
+.producto:hover{
+  transform: scale(1.03);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
-.reserva{
-font-size:13px;
-color:#d10000;
-margin-top:5px;
+@keyframes agregarAnim{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.15);}
+  100%{transform:scale(1);}
+}
+
+.animAgregar{
+  animation: agregarAnim .3s ease;
+}
+
+/* Carrito deslizante */
+.carrito{
+  transition: right .3s ease;
 }
 </style>
 </head>
-
 <body>
 
-<header>Distribuidora Jazmín</header>
+<header onclick="accesoAdmin()">
+<img src="https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg"> Distribuidora Jazmín
+<div id="contador">0</div>
+</header>
 
-<div class="buscador">
-<input type="text" id="buscar" placeholder="Buscar producto...">
-<button class="btn-carrito" onclick="toggleCarrito()">Carrito</button>
-</div>
+<nav>
+<button id="btnBebidas" class="activo">Bebidas</button>
+<button id="btnAlmacen">Almacén</button>
+</nav>
 
-<div class="categorias">
-<button onclick="cargarCategoria('bebidas')">Bebidas</button>
-<button onclick="cargarCategoria('almacen')">Almacén</button>
-</div>
-
+<input type="text" id="buscador" placeholder="Buscar producto...">
 <div class="productos" id="productos"></div>
 
+<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
+
 <div id="carrito">
-<button class="btn-cerrar" onclick="toggleCarrito()">Cerrar</button>
+<div class="barra-arrastre" onclick="toggleCarrito()"></div>
+<div class="carrito-contenido" id="listaCarrito"></div>
+<div class="carrito-footer">
+<div id="total"></div>
+<div id="detallePago" style="margin-top:8px;font-weight:bold;"></div>
+<div id="envioInfo"></div>
+<select id="tipoEntrega" onchange="actualizar()">
+<option value="domicilio">🚚 Entrega a domicilio</option>
+<option value="coordinado">🤝 Entrega coordinada</option>
+</select>
+<select id="zona" onchange="actualizar()">
+<option value="">Seleccionar zona</option>
+<option value="santafe">Santa Fe Capital</option>
+<option value="centro">Zona Centro</option>
+<option value="santotome">Santo Tomé</option>
+</select>
+<input type="text" id="direccion" placeholder="Dirección">
+<div id="senia"></div>
+<button onclick="confirmarPedido()">Confirmar Pedido</button>
+<hr style="margin:15px 0;border-color:#333;">
 
-<h3>Tu pedido</h3>
-<div id="listaCarrito"></div>
-<div class="total" id="total"></div>
-<div class="reserva">Se solicita 50% de reserva para confirmar pedido</div>
+<button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
+💳 Pagar con Mercado Pago (6,42% recargo)
+</button>
 
-<div class="formulario">
-<input type="text" id="nombre" placeholder="Nombre" required>
-<input type="text" id="direccion" placeholder="Dirección (obligatoria)" required>
-<button class="btn-confirmar" onclick="confirmarPedido()">Confirmar por WhatsApp</button>
-<button onclick="generarPDF()">Descargar PDF</button>
+<button onclick="pagarAlias()" style="background:#00e676;color:black;">
+💰 Pagar por Alias (sin recargo)
+</button>
+
+<button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
+🏦 Transferencia CBU (sin recargo)
+</button>
 </div>
 </div>
+
+<!-- Panel Admin -->
+<div class="panel-admin" id="adminPanel">
+<div class="admin-box">
+<h2>Panel Privado - Admin</h2>
+<p><strong>Total Productos:</strong> <span id="adminProductos"></span></p>
+<p><strong>Total Items en Carrito:</strong> <span id="adminItems"></span></p>
+<p><strong>Total Facturación:</strong> $<span id="adminTotal"></span></p>
+<button class="btn" onclick="vaciarCarrito()">Vaciar Carrito</button>
+<button class="btn" onclick="exportarVentas()">Exportar PDF de Ventas</button>
+
+<hr style="margin:20px 0; border-color:#555;">
+<h3>Editar Productos</h3>
+<select id="adminSelectProducto">
+<option value="">Seleccionar producto</option>
+</select>
+<input type="number" id="adminPrecio" placeholder="Nuevo precio">
+<select id="adminEstado">
+<option value="DISPONIBLE">DISPONIBLE</option>
+<option value="SIN STOCK">SIN STOCK</option>
+</select>
+<button onclick="guardarCambios()">Guardar Cambios</button>
+<div id="adminMsg" style="margin-top:10px; color:var(--primary)"></div>
+
+<button class="btn close-admin" onclick="cerrarAdmin()">Cerrar Panel</button>
+</div>
+</div>
+
 
 <script>
-const sheetID = "1UvkRq1iKUc0wu7qJ7AKufIre6owQfsnBmKZAAtuJQpk";
-const bebidasURL = `https://opensheet.elk.sh/${sheetID}/Bebidas`;
-const almacenURL = `https://opensheet.elk.sh/${sheetID}/Almacén`;
-
-let productos = [];
-let carrito = [];
-
-async function cargarCategoria(cat){
-let url = cat === "bebidas" ? bebidasURL : almacenURL;
-let res = await fetch(url);
-let data = await res.json();
-productos = data;
-mostrarProductos(productos);
-}
-
-function mostrarProductos(lista){
-const cont = document.getElementById("productos");
-cont.innerHTML = "";
-
-lista.forEach(prod=>{
-if(prod.Estado && prod.Estado.toLowerCase() === "inactivo") return;
-
-let precio = parseFloat(prod.Precio);
-let mayorista = (prod.Producto.includes("6UNI") || prod.Producto.includes("x6")) 
-? precio * 6 * 0.9 
-: precio * 10 * 0.9;
-
-let card = document.createElement("div");
-card.className = "card";
-
-card.innerHTML = `
-<h4>${prod.Producto}</h4>
-<div class="precio">$${precio.toLocaleString()}</div>
-<div class="mayorista">Mayorista: $${Math.round(mayorista).toLocaleString()}</div>
-<div class="stock">Stock: ${prod.Stock}</div>
-<button onclick='agregarAlCarrito(${JSON.stringify(prod)})'>Agregar</button>
-`;
-
-cont.appendChild(card);
+function calcularTotalActual(){
+let total=0;
+Object.values(carrito).forEach(p=>{
+let precioUnit=calcularPrecioFinal(p,p.cantidad);
+total+=precioUnit*p.cantidad;
 });
+return total;
 }
 
-document.getElementById("buscar").addEventListener("input", e=>{
-let texto = e.target.value.toLowerCase();
-let filtrados = productos.filter(p=> 
-p.Producto.toLowerCase().includes(texto)
-);
-mostrarProductos(filtrados);
-});
+function pagarMercadoPago(){
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
 
-function agregarAlCarrito(prod){
-let existe = carrito.find(p=>p.Producto===prod.Producto);
-if(existe){
-existe.cantidad++;
-}else{
-carrito.push({...prod, cantidad:1});
-}
-actualizarCarrito();
-}
+  let total = calcularTotalActual();
 
-function actualizarCarrito(){
-const lista = document.getElementById("listaCarrito");
-lista.innerHTML="";
-let total = 0;
+  // aplicar 6,42% SOLO a Mercado Pago
+  let recargo = total * 0.0642;
+  let totalFinal = total + recargo;
 
-carrito.forEach(p=>{
-let precio = parseFloat(p.Precio);
-let subtotal = precio * p.cantidad;
-total += subtotal;
+  alert(
+    "Pago con Mercado Pago\n\n" +
+    "Total productos: $" + total.toFixed(2) +
+    "\nRecargo 6,42%: $" + recargo.toFixed(2) +
+    "\nTotal final: $" + totalFinal.toFixed(2)
+  );
 
-lista.innerHTML += `
-<div class="item-carrito">
-${p.Producto} x${p.cantidad}
-<span>$${subtotal.toLocaleString()}</span>
-</div>
-`;
-});
-
-document.getElementById("total").innerText = "Total: $" + total.toLocaleString();
+  window.open(LINK_MP, "_blank");
 }
 
-function toggleCarrito(){
-document.getElementById("carrito").classList.toggle("abierto");
-}
-
-function confirmarPedido(){
-let nombre = document.getElementById("nombre").value;
-let direccion = document.getElementById("direccion").value;
-
-if(!nombre || !direccion){
-alert("Completar nombre y dirección");
+function pagarAlias(){
+if(Object.keys(carrito).length===0){
+alert("Carrito vacío");
 return;
 }
 
-let mensaje = `Pedido Distribuidora Jazmín%0A%0A`;
-carrito.forEach(p=>{
-mensaje += `${p.Producto} x${p.cantidad}%0A`;
-});
-mensaje += `%0ATotal: ${document.getElementById("total").innerText}%0A`;
-mensaje += `Reserva 50%% requerida%0A`;
-mensaje += `Nombre: ${nombre}%0A`;
-mensaje += `Dirección: ${direccion}`;
+let total=calcularTotalActual();
 
-window.open(`https://wa.me/5493425695340?text=${mensaje}`);
+alert("Alias: "+ALIAS+"\nTotal a transferir: $"+total.toLocaleString()+"\n(Sin recargo)");
+
 }
 
-function generarPDF(){
+function pagarTransferencia(){
+if(Object.keys(carrito).length===0){
+alert("Carrito vacío");
+return;
+}
+
+let total=calcularTotalActual();
+
+alert("CBU: "+CBU+"\nTotal a transferir: $"+total.toLocaleString()+"\n(Sin recargo)");
+
+}
 const { jsPDF } = window.jspdf;
-let doc = new jsPDF();
 
-doc.text("Distribuidora Jazmín", 10, 10);
-let y = 20;
+const PASSWORD="Jazmin2026Admin";
+const SHEET_URL="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
 
-carrito.forEach(p=>{
-doc.text(`${p.Producto} x${p.cantidad}`, 10, y);
-y += 8;
-});
+let productosBebidas=[];
+let productosAlmacen=[];
+let productos=[];
+let todos=[];
+let carrito={};
 
-doc.text(document.getElementById("total").innerText, 10, y+5);
-doc.save("pedido.pdf");
+const MINIMO_GENERAL=60000;
+const MINIMO_SANTO_TOME=80000;
+
+async function cargarDatos(){
+  try{
+    const urlBebidas=`https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
+    const urlAlmacen=`https://opensheet.elk.sh/${SHEET_URL}/almacen`;
+
+    const [rB,rA]=await Promise.all([fetch(urlBebidas),fetch(urlAlmacen)]);
+
+    productosBebidas=await rB.json();
+    productosAlmacen=await rA.json();
+
+    todos=[...productosBebidas,...productosAlmacen];
+    productos=productosBebidas;
+
+    mostrar();
+  }catch(err){
+    console.error("Error cargando datos:",err);
+    document.getElementById("productos").innerHTML="<p style='text-align:center'>Error cargando productos</p>";
+  }
 }
 
-</script>
-</body>
-  </html>
+function mostrar(){
+  const cont=document.getElementById("productos");
+  cont.innerHTML="";
+
+  const filtro=document.getElementById("buscador").value.toLowerCase();
+
+  let base=productos.length?productos:todos;
+
+  let lista=filtro
+    ? todos.filter(p=>p.producto?.toLowerCase().includes(filtro))
+    : base;
+
+  lista.forEach(p=>{
+    if(!p.codigo||!p.producto) return;
+
+    let precioNum=Number(p.precio);
+    if(isNaN(precioNum)) return;
+
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <h4>${p.producto}</h4>
+      <div class="precio">$${precioNum.toLocaleString()}</div>
+      <div class="${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
+      <div class="controles">
+        <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
+        <span>${carrito[p.codigo]?.cantidad||0}</span>
+        <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+function agregar(codigo){
+  const producto=todos.find(p=>p.codigo===codigo);
+  if(!producto) return;
+
+  if(!carrito[codigo]){
+    carrito[codigo]={...producto,cantidad:1};
+  }else{
+    carrito[codigo].cantidad++;
+  }
+
+  actualizar();
+  mostrar();
+  animarCarritoIcono();
+  // 🔔 Animación visual
+  const card=document.querySelector(`[data-codigo="${codigo}"]`);
+  if(card){
+    card.classList.add("animAgregar");
+    setTimeout(()=>card.classList.remove("animAgregar"),300);
+  }
+
+  // 🔊 Sonido
+  const audio=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
+  audio.volume=0.2;
+  audio.play();
+}
+
+function actualizar(){
+  let total=0;
+  let cant=0;
+
+  const lista=document.getElementById("listaCarrito");
+  lista.innerHTML="";
+
+  Object.values(carrito).forEach(p=>{
+    const sub=Number(p.precio)*p.cantidad;
+    total+=sub;
+    cant+=p.cantidad;
+
+    lista.innerHTML+=`
+    <div class="item-carrito">
+      <span style="flex:1;">${p.producto}</span>
+      <div class="control-carrito">
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">−</button>
+        <span class="cant-num">${p.cantidad}</span>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("contador").innerText=cant;
+
+  let totalFinal = total;
+
+document.getElementById("detallePago").innerHTML =
+  "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago tiene 6,42% extra.</span>";
+
+document.getElementById("total").innerHTML =
+  "Total productos: $" + total.toLocaleString();
+}
+
+
+function eliminarProducto(codigo){
+  delete carrito[codigo];
+  actualizar();
+  mostrar();
+}
+
+function toggleCarrito(){
+  document.getElementById("carrito").classList.toggle("abierto");
+}
+
+function confirmarPedido(){
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
+
+  const totalNumero=parseInt(document.getElementById("total").innerText.replace(/\D/g,""));
+  const fecha=new Date().toLocaleString("es-AR");
+
+  const doc=new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Distribuidora Jazmín",20,20);
+  doc.text("Fecha: "+fecha,20,30);
+
+  let y=40;
+  Object.values(carrito).forEach(p=>{
+    let sub=Number(p.precio)*p.cantidad;
+    doc.text(`${p.producto} x${p.cantidad} - $${sub}`,20,y);
+    y+=8;
+  });
+
+  doc.text("Total: $"+totalNumero,20,y+10);
+  doc.save("Pedido_Jazmin.pdf");
+}
+
+document.getElementById("buscador").addEventListener("input",mostrar);
+
+const btnBebidas = document.getElementById("btnBebidas");
+const btnAlmacen = document.getElementById("btnAlmacen");
+
+btnBebidas.onclick=()=>{
+  productos=productosBebidas;
+  btnBebidas.classList.add("activo");
+  btnAlmacen.classList.remove("activo");
+  mostrar();
+};
+
+btnAlmacen.onclick=()=>{
+  productos=productosAlmacen;
+  btnAlmacen.classList.add("activo");
+  btnBebidas.classList.remove("activo");
+  mostrar();
+};
+
+async function init(){
+  await cargarDatos();
+  actualizar();
+}
+
+init();
+/* =========================
+   🔥 CONFIGURACIONES EXTRA
+========================= */
+
+const WHATSAPP_NUMERO="543425695340";
+const LINK_MP="https://link.mercadopago.com.ar/distribuidorajazmin";
+const MP_RECARGO=1.0642; // 6,42%
+const ALIAS="jazmín online shop";
+const CBU="0000003100054608688074";
+const FRASE_CONFIANZA="Gracias por confiar en Distribuidora Jazmín. Calidad, compromiso y confianza en cada entrega.";
+
+/* =========================
+   💰 PRECIO MAYORISTA (6+ unidades)
+========================= */
+
+function calcularPrecioFinal(producto,cantidad){
+  let precio = Number(producto.precio);
+  if(cantidad>=6){
+    precio = precio * 0.95; // 5% descuento mayorista
+  }
+  return precio;
+}
+
+/* =========================
+   🚚 ENVÍO INTELIGENTE
+========================= */
+
+function calcularEnvio(total){
+  const zona=document.getElementById("zona")?.value;
+  if(zona==="santotome" && total < MINIMO_SANTO_TOME){
+    return {ok:false,mensaje:"El mínimo para Santo Tomé es $"+MINIMO_SANTO_TOME.toLocaleString()};
+  }
+  if(total < MINIMO_GENERAL){
+    return {ok:false,mensaje:"El mínimo de compra es $"+MINIMO_GENERAL.toLocaleString()};
+  }
+  return {ok:true,mensaje:"Envío aprobado ✔"};
+}
+
+/* =========================
+   💳 OPCIÓN PAGO 50% o 100%
+========================= */
+
+function calcularPago(total){
+  const tipoPago = document.getElementById("tipoPagoExtra")?.value || "100";
+  if(tipoPago==="50"){
+    return total*0.5;
+  }
+  return total;
+}
+
+/* =========================
+   🧾 PDF PROFESIONAL MEJORADO
+========================= */
+
+function generarPDFProfesional(totalFinal){
+  const fecha=new Date().toLocaleString("es-AR");
+  const direccion=document.getElementById("direccion")?.value || "No especificada";
+  const formaPago=document.getElementById("tipoPagoExtra")?.value==="50" ? "Seña 50%" : "Pago total";
+
+  const doc=new jsPDF();
+  doc.setFontSize(18);
+  doc.text("Distribuidora Jazmín",20,20);
+  doc.setFontSize(10);
+  doc.text(FRASE_CONFIANZA,20,30);
+  doc.text("Fecha: "+fecha,20,40);
+  doc.text("Dirección: "+direccion,20,48);
+  doc.text("Forma de pago: "+formaPago,20,56);
+
+  let y=70;
+  Object.values(carrito).forEach(p=>{
+    let precioUnit = calcularPrecioFinal(p,p.cantidad);
+    let sub=precioUnit*p.cantidad;
+    doc.text(`${p.producto} x${p.cantidad} - $${sub.toLocaleString()}`,20,y);
+    y+=8;
+  });
+
+  doc.setFontSize(14);
+  doc.text("Total a pagar: $"+totalFinal.toLocaleString(),20,y+10);
+
+  doc.save("Pedido_Distribuidora_Jazmin.pdf");
+}
+
+/* =========================
+   📲 WHATSAPP PROFESIONAL
+========================= */
+
+function enviarWhatsApp(totalFinal){
+  let mensaje="Hola Distribuidora Jazmín 👋%0A";
+  mensaje+="Quiero confirmar el siguiente pedido:%0A%0A";
+
+  Object.values(carrito).forEach(p=>{
+    mensaje+=`- ${p.producto} x${p.cantidad}%0A`;
+  });
+
+  mensaje+=`%0ATotal: $${totalFinal.toLocaleString()}%0A`;
+  mensaje+=`Forma de pago: ${document.getElementById("tipoPagoExtra")?.value==="50"?"Seña 50%":"Pago total"}%0A`;
+  mensaje+="Muchas gracias!";
+
+  window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${mensaje}`);
+}
+
+/* =========================
+   💳 MERCADO PAGO CON RECARGO
+========================= */
+
+function pagarConMP(total){
+  const totalMP = total * MP_RECARGO;
+  window.open(LINK_MP,"_blank");
+  alert("El precio con Mercado Pago incluye 6,42% de recargo.\nTotal con recargo: $"+totalMP.toLocaleString());
+}
+
+/* =========================
+   👑 PANEL ADMIN FUNCIONANDO
+========================= */
+
+function accesoAdmin(){
+  const pass=prompt("Ingrese contraseña admin:");
+  if(pass===PASSWORD){
+    document.getElementById("adminPanel").style.display="block";
+    actualizarAdmin();
+  }else{
+    alert("Contraseña incorrecta");
+  }
+}
+
+function cerrarAdmin(){
+  document.getElementById("adminPanel").style.display="none";
+}
+
+function actualizarAdmin(){
+  document.getElementById("adminProductos").innerText=todos.length;
+  document.getElementById("adminItems").innerText=Object.keys(carrito).length;
+
+  let total=0;
+  Object.values(carrito).forEach(p=>{
+    total+=Number(p.precio)*p.cantidad;
+  });
+
+  document.getElementById("adminTotal").innerText=total.toLocaleString();
+
+  const select=document.getElementById("adminSelectProducto");
+  select.innerHTML="<option value=''>Seleccionar producto</option>";
+  todos.forEach(p=>{
+    select.innerHTML+=`<option value="${p.codigo}">${p.producto}</option>`;
+  });
+}
+
+function guardarCambios(){
+  const codigo=document.getElementById("adminSelectProducto").value;
+  const nuevoPrecio=document.getElementById("adminPrecio").value;
+  const nuevoEstado=document.getElementById("adminEstado").value;
+
+  const prod=todos.find(p=>p.codigo===codigo);
+  if(!prod) return;
+
+  if(nuevoPrecio) prod.precio=nuevoPrecio;
+  if(nuevoEstado) prod.estado=nuevoEstado;
+
+  document.getElementById("adminMsg").innerText="Producto actualizado correctamente ✔";
+  mostrar();
+}
+
+function vaciarCarrito(){
+  carrito={};
+  actualizar();
+  mostrar();
+}
+
+function exportarVentas(){
+  let total=0;
+  Object.values(carrito).forEach(p=>{
+    total+=Number(p.precio)*p.cantidad;
+  });
+  generarPDFProfesional(total);
+}
+
+/* =========================
+   🆕 AGREGAR SELECT PAGO DINÁMICO
+========================= */
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const footer=document.querySelector(".carrito-footer");
+
+  const selectPago=document.createElement("select");
+  selectPago.id="tipoPagoExtra";
+  selectPago.innerHTML=`
+    <option value="100">💰 Pagar total</option>
+    <option value="50">💳 Señar 50%</option>
+  `;
+  footer.insertBefore(selectPago, footer.children[footer.children.length-1]);
+});
+
+function animarCarritoIcono(){
+  const icono=document.getElementById("btnFlotante");
+  if(!icono) return;
+
+  icono.style.transition="transform .2s ease";
+  icono.style.transform="scale(1.2)";
+  setTimeout(()=>{
+    icono.style.transform="scale(1)";
+  },200);
+}
+  </script>
