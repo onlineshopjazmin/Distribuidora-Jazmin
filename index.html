@@ -298,11 +298,11 @@ margin-top:20px;
         cursor:pointer;
         z-index:1100;
         ">
-📲
+
 </button>
 
 <!-- Botón flotante del carrito -->
-<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
+<button id="btnFlotante" onclick="toggleCarrito()"></button>
 
 <div id="carrito">
 <div class="barra-arrastre" onclick="toggleCarrito()"></div>
@@ -312,8 +312,8 @@ margin-top:20px;
 <div id="detallePago" style="margin-top:8px;font-weight:bold;"></div>
 <div id="envioInfo"></div>
 <select id="tipoEntrega" onchange="actualizar()">
-<option value="domicilio">🚚 Entrega a domicilio</option>
-<option value="coordinado">🤝 Entrega coordinada</option>
+<option value="domicilio"> Entrega a domicilio</option>
+<option value="coordinado"> Entrega coordinada</option>
 </select>
 <select id="zona" onchange="actualizar()">
 <option value="">Seleccionar zona</option>
@@ -327,15 +327,15 @@ margin-top:20px;
 <hr style="margin:15px 0;border-color:#333;">
 
 <button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
-💳 Pagar con Link Mercado Pago (6,42% recargo)
+ Pagar con Link Mercado Pago (6,42% recargo)
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
-💰 Pagar por Alias (sin recargo)
+ Pagar por Alias (sin recargo)
 </button>
 
 <button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
-🏦 Transferencia CBU (sin recargo)
+ Transferencia CBU (sin recargo)
 </button>
 </div>
 </div>
@@ -379,48 +379,95 @@ return total;
 }
 
 function pagarMercadoPago(){
+
   if(Object.keys(carrito).length===0){
     alert("Carrito vacío");
     return;
   }
 
-  let total = calcularTotalActual();
+// 1️⃣ Total productos
+let totalProductos = calcularTotalActual();
 
-  // aplicar 6,42% SOLO a Mercado Pago Link
-  let recargo = total * 0.0642;
-  let totalFinal = total + recargo;
+// 2️⃣ Calcular envío
+const envio = calcularEnvio(totalProductos);
+let subtotal = totalProductos;
+if(envio.ok){
+  subtotal += envio.costo;
+}
 
-  alert(
-    "Pago con Mercado Pago\n\n" +
-    "Total productos: $" + total.toFixed(2) +
-    "\nRecargo 6,42%: $" + recargo.toFixed(2) +
-    "\nTotal final: $" + totalFinal.toFixed(2)
-  );
+// 3️⃣ Aplicar tipo de pago
+const tipoPago = document.getElementById("tipoPagoExtra")?.value || "100";
+let totalConPago = subtotal;
+if(tipoPago === "50"){
+  totalConPago = subtotal * 0.5;
+}
+
+// 4️⃣ Aplicar recargo Mercado Pago
+let recargo = totalConPago * 0.0642;
+let totalFinal = totalConPago + recargo;
+
+alert(
+  "Pago con Mercado Pago\n\n" +
+  "Total productos: $" + totalProductos.toLocaleString() +
+  "\nEnvío: $" + (envio.ok ? envio.costo.toLocaleString() : "0") +
+  "\nSubtotal: $" + subtotal.toLocaleString() +
+  (tipoPago==="50" ? "\nSeña 50%: $" + totalConPago.toLocaleString() : "") +
+  "\nRecargo 6,42%: $" + recargo.toLocaleString() +
+  "\n\nTOTAL FINAL: $" + totalFinal.toLocaleString()
+);
 
   window.open(LINK_MP, "_blank");
 }
 
 function pagarAlias(){
-if(Object.keys(carrito).length===0){
-alert("Carrito vacío");
-return;
-}
 
-let total=calcularTotalActual();
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
 
-alert("Alias: "+ALIAS+"\nTotal a transferir: $"+total.toLocaleString()+"\n(Sin recargo)");
+  let totalProductos = calcularTotalActual();
+  const envio = calcularEnvio(totalProductos);
+
+  let totalConEnvio = totalProductos;
+
+  if(envio.ok){
+    totalConEnvio += envio.costo;
+  }
+
+  alert(
+    "Alias: " + ALIAS +
+    "\n\nTotal productos: $" + totalProductos.toLocaleString() +
+    "\nEnvío: $" + (envio.ok ? envio.costo.toLocaleString() : "0") +
+    "\n\nTOTAL A TRANSFERIR: $" + totalConEnvio.toLocaleString() +
+    "\n\n(Sin recargo)"
+  );
 
 }
 
 function pagarTransferencia(){
-if(Object.keys(carrito).length===0){
-alert("Carrito vacío");
-return;
-}
 
-let total=calcularTotalActual();
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
 
-alert("CBU: "+CBU+"\nTotal a transferir: $"+total.toLocaleString()+"\n(Sin recargo)");
+  let totalProductos = calcularTotalActual();
+  const envio = calcularEnvio(totalProductos);
+
+  let totalConEnvio = totalProductos;
+
+  if(envio.ok){
+    totalConEnvio += envio.costo;
+  }
+
+  alert(
+    "CBU: " + CBU +
+    "\n\nTotal productos: $" + totalProductos.toLocaleString() +
+    "\nEnvío: $" + (envio.ok ? envio.costo.toLocaleString() : "0") +
+    "\n\nTOTAL A TRANSFERIR: $" + totalConEnvio.toLocaleString() +
+    "\n\n(Sin recargo)"
+  );
 
 }
 const { jsPDF } = window.jspdf;
@@ -439,21 +486,38 @@ const MINIMO_SANTO_TOME=80000;
 
 async function cargarDatos(){
   try{
+
     const urlBebidas=`https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
     const urlAlmacen=`https://opensheet.elk.sh/${SHEET_URL}/almacen`;
 
-    const [rB,rA]=await Promise.all([fetch(urlBebidas),fetch(urlAlmacen)]);
+    const [rB,rA]=await Promise.all([
+      fetch(urlBebidas),
+      fetch(urlAlmacen)
+    ]);
 
-    productosBebidas=await rB.json();
-    productosAlmacen=await rA.json();
+    productosBebidas = await rB.json();
+    productosAlmacen = await rA.json();
 
-    todos=[...productosBebidas,...productosAlmacen];
-    productos=productosBebidas;
+    // 🔧 LIMPIAR ESPACIOS EN CODIGOS (MUY IMPORTANTE)
+    productosBebidas.forEach(p=>{
+      if(p.codigo){
+        p.codigo = p.codigo.trim();
+      }
+    });
 
-    mostrar();
-  }catch(err){
-    console.error("Error cargando datos:",err);
-    document.getElementById("productos").innerHTML="<p style='text-align:center'>Error cargando productos</p>";
+    productosAlmacen.forEach(p=>{
+      if(p.codigo){
+        p.codigo = p.codigo.trim();
+      }
+    });
+
+    // Si después unís todo en un array general:
+    todos = [...productosBebidas, ...productosAlmacen];
+
+    mostrar(); // o la función que uses para pintar productos
+
+  }catch(error){
+    console.error("Error cargando datos:", error);
   }
 }
 
@@ -476,7 +540,8 @@ function mostrar(){
     if(isNaN(precioNum)) return;
 
     const div=document.createElement("div");
-    div.className="card";
+div.className="card";
+div.setAttribute("data-codigo", p.codigo);
     div.innerHTML=`
       <h4>${p.producto}</h4>
       <div class="precio">$${precioNum.toLocaleString()}</div>
@@ -504,14 +569,14 @@ function agregar(codigo){
   actualizar();
   mostrar();
   animarCarritoIcono();
-  // 🔔 Animación visual
+  //  Animación visual
   const card=document.querySelector(`[data-codigo="${codigo}"]`);
   if(card){
     card.classList.add("animAgregar");
     setTimeout(()=>card.classList.remove("animAgregar"),300);
   }
 
-  // 🔊 Sonido
+  //  Sonido
   const audio=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
   audio.volume=0.2;
   audio.play();
@@ -534,10 +599,10 @@ const sub = precioUnit * p.cantidad;
     <div class="item-carrito">
       <span style="flex:1;">${p.producto}</span>
       <div class="control-carrito">
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">−</button>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
         <span class="cant-num">${p.cantidad}</span>
         <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
-        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
+        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')"></button>
       </div>
     </div>`;
   });
@@ -549,26 +614,37 @@ const sub = precioUnit * p.cantidad;
 document.getElementById("detallePago").innerHTML =
   "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago link tiene 6,42% extra.</span>";
 
-document.getElementById("total").innerHTML =
-  "Total productos: $" + total.toLocaleString();
-  
-// 🔹 Calcular envío
-const envioDiv = document.getElementById("envioInfo");
+const pagoElement = document.getElementById("tipoPagoExtra");
+const tipoPago = pagoElement ? pagoElement.value : "100";
+
 const envio = calcularEnvio(total);
+
+document.getElementById("envioInfo").innerHTML = envio.mensaje;
 
 let totalConEnvio = total;
 
 if(envio.ok){
-  totalConEnvio += envio.costo; // sumar el envío al total
-  envioDiv.innerHTML = "<span style='color:lightgreen;'>" + envio.mensaje + "</span>";
-}else{
-  envioDiv.innerHTML = "<span style='color:#ff6b6b;'>" + envio.mensaje + "</span>";
+  totalConEnvio += envio.costo;
+
 }
 
-// Mostrar total incluyendo envío
-document.getElementById("total").innerHTML =
-  "Total productos + envío: $" + totalConEnvio.toLocaleString();
+if(tipoPago === "50"){
 
+  const senia = totalConEnvio * 0.5;
+  const saldo = totalConEnvio - senia;
+
+  document.getElementById("total").innerHTML = `
+    <strong>Total del pedido:</strong> $${totalConEnvio.toLocaleString()}<br>
+    <strong>Seña a pagar ahora:</strong> $${senia.toLocaleString()}<br>
+    <strong>Saldo pendiente:</strong> $${saldo.toLocaleString()}
+  `;
+
+}else{
+
+  document.getElementById("total").innerHTML =
+    "<strong>Total a pagar:</strong> $" + totalConEnvio.toLocaleString();
+}
+  
 }
 function eliminarProducto(codigo){
   delete carrito[codigo];
@@ -631,7 +707,7 @@ async function init(){
 
 init();
 /* =========================
-   🔥 CONFIGURACIONES EXTRA
+    CONFIGURACIONES EXTRA
 ========================= */
 
 const WHATSAPP_NUMERO="543425695340";
@@ -642,7 +718,7 @@ const CBU="0000003100054608688074";
 const FRASE_CONFIANZA="Gracias por confiar en Distribuidora Jazmín. Calidad, compromiso y confianza en cada entrega.";
 
 /* =========================
-   💰 PRECIO MAYORISTA (6+ unidades)
+    PRECIO MAYORISTA (6+ unidades)
 ========================= */
 
 function calcularPrecioFinal(producto,cantidad){
@@ -654,7 +730,7 @@ function calcularPrecioFinal(producto,cantidad){
 }
 
 /* =========================
-   🚚 ENVÍO INTELIGENTE
+    ENVÍO INTELIGENTE
 ========================= */
 
 function calcularEnvio(total){
@@ -676,7 +752,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   if(zona === "santafe"){
     if(total >= 100000){
-      mensaje = "🎉 Envío GRATIS en Santa Fe por superar $100.000";
+      mensaje = " Envío GRATIS en Santa Fe por superar $100.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 2000;
@@ -689,7 +765,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   } else if(zona === "santotome"){
     if(total >= 120000){
-      mensaje = "🎉 Envío GRATIS en Santo Tomé por superar $120.000";
+      mensaje = " Envío GRATIS en Santo Tomé por superar $120.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 6000;
@@ -705,7 +781,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 }
 
 /* =========================
-   💳 OPCIÓN PAGO 50% o 100%
+    OPCIÓN PAGO 50% o 100%
 ========================= */
 
 function calcularPago(total){
@@ -717,7 +793,7 @@ function calcularPago(total){
 }
 
 /* =========================
-   🧾 PDF PROFESIONAL MEJORADO
+    PDF PROFESIONAL MEJORADO
 ========================= */
 
 function generarPDFProfesional(totalFinal){
@@ -749,7 +825,7 @@ function generarPDFProfesional(totalFinal){
 }
 
 /* =========================
-   📲 WHATSAPP PROFESIONAL
+    WHATSAPP PROFESIONAL
 ========================= */
 
 function enviarWhatsApp(totalFinal){
@@ -757,7 +833,7 @@ function enviarWhatsApp(totalFinal){
   const pagoElement = document.getElementById("tipoPagoExtra");
   const tipoPago = pagoElement ? pagoElement.value : "100";
 
-  let mensaje="Hola Distribuidora Jazmín 👋%0A";
+  let mensaje="Hola Distribuidora Jazmín %0A";
   mensaje+="Quiero confirmar el siguiente pedido:%0A%0A";
 
   Object.values(carrito).forEach(p=>{
@@ -776,28 +852,35 @@ function enviarWhatsApp(totalFinal){
 
 
 /* =========================
-   📲 BOTÓN FLOTANTE WHATSAPP
+    BOTÓN FLOTANTE WHATSAPP
 ========================= */
 
 function whatsappFlotante(){
 
-  let total = 0;
-  Object.values(carrito).forEach(p=>{
-    total += Number(p.precio) * p.cantidad;
-  });
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
 
-  const envio = calcularEnvio(total);
-  let totalConEnvio = total;
+  let totalProductos = calcularTotalActual();
+
+  const envio = calcularEnvio(totalProductos);
+  let totalConEnvio = totalProductos;
 
   if(envio.ok){
     totalConEnvio += envio.costo;
   }
 
+  const tipoPago = document.getElementById("tipoPagoExtra")?.value || "100";
+
+  if(tipoPago === "50"){
+    totalConEnvio = totalConEnvio * 0.5;
+  }
+
   enviarWhatsApp(totalConEnvio);
 }
-
 /* =========================
-   💳 MERCADO PAGO CON RECARGO
+    MERCADO PAGO CON RECARGO
 ========================= */
 
 function pagarConMP(total){
@@ -807,7 +890,7 @@ function pagarConMP(total){
 }
 
 /* =========================
-   👑 PANEL ADMIN FUNCIONANDO
+    PANEL ADMIN FUNCIONANDO
 ========================= */
 
 function accesoAdmin(){
@@ -836,10 +919,10 @@ function actualizarAdmin(){
   document.getElementById("adminTotal").innerText=total.toLocaleString();
 
   const select=document.getElementById("adminSelectProducto");
-  select.innerHTML="<option value=''>Seleccionar producto</option>";
-  todos.forEach(p=>{
-    select.innerHTML+=`<option value="${p.codigo}">${p.producto}</option>`;
-  });
+select.innerHTML="<option value=''>Seleccionar producto</option>";
+todos.forEach(p=>{
+  select.innerHTML+=`<option value="${p.codigo}">${p.producto}</option>`;
+});
 }
 
 function guardarCambios(){
@@ -853,7 +936,7 @@ function guardarCambios(){
   if(nuevoPrecio) prod.precio=nuevoPrecio;
   if(nuevoEstado) prod.estado=nuevoEstado;
 
-  document.getElementById("adminMsg").innerText="Producto actualizado correctamente ✔";
+  document.getElementById("adminMsg").innerText="Producto actualizado correctamente ";
   mostrar();
 }
 
@@ -881,7 +964,7 @@ function exportarVentas(){
 }
 
 /* =========================
-   🆕 AGREGAR SELECT PAGO DINÁMICO
+    AGREGAR SELECT PAGO DINÁMICO
 ========================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
@@ -890,10 +973,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   const selectPago=document.createElement("select");
   selectPago.id="tipoPagoExtra";
   selectPago.innerHTML=`
-    <option value="100">💰 Pagar total</option>
-    <option value="50">💳 Señar 50%</option>
+    <option value="100"> Pagar total</option>
+    <option value="50"> Señar 50%</option>
   `;
-  footer.insertBefore(selectPago, footer.children[footer.children.length-1]);
+  selectPago.onchange = actualizar;
+footer.insertBefore(selectPago, footer.children[footer.children.length-1]);
 });
 
 function animarCarritoIcono(){
