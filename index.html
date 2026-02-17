@@ -311,35 +311,62 @@ margin-top:20px;
 
 <script>
 const { jsPDF } = window.jspdf;
+
 const PASSWORD="Jazmin2026Admin";
-const SHEET_URL="2PACX-1vSl-xY9G3t_QhAVqLeA6ct9qBsG8q-BqIHyWkBXyU4g8wHRE1kAQDVgXI0MwOKtOp4GeeV3yYFRkxyL";
-let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
+const SHEET_URL="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
+
+let productosBebidas=[];
+let productosAlmacen=[];
+let productos=[];
+let todos=[];
+let carrito={};
+
 const MINIMO_GENERAL=60000;
 const MINIMO_SANTO_TOME=80000;
 
 async function cargarDatos(){
-  const urlBebidas = `https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
-  const urlAlmacen = `https://opensheet.elk.sh/${SHEET_URL}/almacen`;
-  const [rB, rA] = await Promise.all([fetch(urlBebidas), fetch(urlAlmacen)]);
-  productosBebidas = await rB.json();
-  productosAlmacen = await rA.json();
-  todos = [...productosBebidas, ...productosAlmacen];
-  productos = productosBebidas;
-  mostrar();
+  try{
+    const urlBebidas=`https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
+    const urlAlmacen=`https://opensheet.elk.sh/${SHEET_URL}/almacen`;
+
+    const [rB,rA]=await Promise.all([fetch(urlBebidas),fetch(urlAlmacen)]);
+
+    productosBebidas=await rB.json();
+    productosAlmacen=await rA.json();
+
+    todos=[...productosBebidas,...productosAlmacen];
+    productos=productosBebidas;
+
+    mostrar();
+  }catch(err){
+    console.error("Error cargando datos:",err);
+    document.getElementById("productos").innerHTML="<p style='text-align:center'>Error cargando productos</p>";
+  }
 }
 
 function mostrar(){
   const cont=document.getElementById("productos");
   cont.innerHTML="";
+
   const filtro=document.getElementById("buscador").value.toLowerCase();
-  let lista=filtro?todos.filter(p=>p.producto?.toLowerCase().includes(filtro)):productos;
+
+  let base=productos.length?productos:todos;
+
+  let lista=filtro
+    ? todos.filter(p=>p.producto?.toLowerCase().includes(filtro))
+    : base;
+
   lista.forEach(p=>{
-    if(!p.codigo||!p.producto||!p.precio) return;
+    if(!p.codigo||!p.producto) return;
+
+    let precioNum=Number(p.precio);
+    if(isNaN(precioNum)) return;
+
     const div=document.createElement("div");
     div.className="card";
     div.innerHTML=`
       <h4>${p.producto}</h4>
-      <div class="precio">$${Number(p.precio).toLocaleString()}</div>
+      <div class="precio">$${precioNum.toLocaleString()}</div>
       <div class="${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
       <div class="controles">
         <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
@@ -353,21 +380,30 @@ function mostrar(){
 
 function cambiarCantidad(codigo,val){
   const prod=todos.find(p=>p.codigo===codigo);
+  if(!prod) return;
+
   if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
+
   carrito[codigo].cantidad+=val;
+
   if(carrito[codigo].cantidad<=0) delete carrito[codigo];
+
   actualizar();
   mostrar();
 }
 
 function actualizar(){
-  let total=0,cant=0;
+  let total=0;
+  let cant=0;
+
   const lista=document.getElementById("listaCarrito");
   lista.innerHTML="";
+
   Object.values(carrito).forEach(p=>{
     const sub=Number(p.precio)*p.cantidad;
     total+=sub;
     cant+=p.cantidad;
+
     lista.innerHTML+=`
     <div class="item-carrito">
       <span style="flex:1;">${p.producto}</span>
@@ -379,22 +415,10 @@ function actualizar(){
       </div>
     </div>`;
   });
+
   document.getElementById("contador").innerText=cant;
-  let envio=0;
-  let envioTexto="";
-  const tipo=document.getElementById("tipoEntrega").value;
-  const zona=document.getElementById("zona").value;
-  if(tipo==="coordinado") envioTexto="🤝 Entrega coordinada sin costo";
-  else {
-    if(zona==="santotome"){ envio=(total>=MINIMO_SANTO_TOME)?0:4000; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Santo Tomé: $4.000";}
-    else if(zona==="santafe"){ envio=(total>=MINIMO_GENERAL)?0:1500; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Santa Fe Capital: $1.500";}
-    else if(zona==="centro"){ envio=(total>=MINIMO_GENERAL)?0:2000; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Zona Centro: $2.000";}
-    else envioTexto="Seleccionar zona";
-  }
-  document.getElementById("envioInfo").innerText=envioTexto;
-  let totalFinal=total+envio;
-  document.getElementById("total").innerText="Total: $"+totalFinal.toLocaleString();
-  document.getElementById("senia").innerText="Seña 50%: $"+Math.round(totalFinal*0.5).toLocaleString();
+
+  document.getElementById("total").innerText="Total: $"+total.toLocaleString();
 }
 
 function eliminarProducto(codigo){
@@ -403,141 +427,55 @@ function eliminarProducto(codigo){
   mostrar();
 }
 
-function toggleCarrito(){document.getElementById("carrito").classList.toggle("abierto");}
+function toggleCarrito(){
+  document.getElementById("carrito").classList.toggle("abierto");
+}
 
 function confirmarPedido(){
-  if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
-  const tipo=document.getElementById("tipoEntrega").value;
-  const direccion=document.getElementById("direccion").value;
-  if(tipo==="domicilio" && direccion.trim()===""){alert("Ingresá dirección"); return;}
+  if(Object.keys(carrito).length===0){
+    alert("Carrito vacío");
+    return;
+  }
+
   const totalNumero=parseInt(document.getElementById("total").innerText.replace(/\D/g,""));
-  const senia=Math.round(totalNumero*0.5);
   const fecha=new Date().toLocaleString("es-AR");
+
   const doc=new jsPDF();
   doc.setFontSize(16);
   doc.text("Distribuidora Jazmín",20,20);
-  doc.setFontSize(11);
-  doc.text("¡Gracias por confiar en nosotros!",20,30);
-  doc.text("Fecha: "+fecha,20,40);
-  let y=50;
+  doc.text("Fecha: "+fecha,20,30);
+
+  let y=40;
   Object.values(carrito).forEach(p=>{
     let sub=Number(p.precio)*p.cantidad;
     doc.text(`${p.producto} x${p.cantidad} - $${sub}`,20,y);
     y+=8;
   });
+
   doc.text("Total: $"+totalNumero,20,y+10);
-  doc.text("Seña 50%: $"+senia,20,y+20);
-  doc.text("Alias: jazminonlineshop",20,y+30);
-  doc.text("CBU: 0000003100054608688074",20,y+40);
   doc.save("Pedido_Jazmin.pdf");
-
-  let mensaje="Hola quiero hacer este pedido:%0A";
-  Object.values(carrito).forEach(p=>{
-    let sub=Number(p.precio)*p.cantidad;
-    mensaje+=`- ${p.producto} x${p.cantidad} - $${sub}%0A`;
-  });
-  mensaje+=`%0ATotal: $${totalNumero}%0ASeña 50%: $${senia}%0AFecha: ${fecha}`;
-  window.open(`https://wa.me/5493425695340?text=${mensaje}`);
 }
 
-// --- Panel Admin ---
-function accesoAdmin(){
-  let clave=prompt("Ingrese contraseña admin:");
-  if(clave===PASSWORD){
-    document.getElementById("adminPanel").style.display="block"; 
-    actualizarAdmin();
-    cargarSelectAdmin();
-  }
-  else alert("Contraseña incorrecta");
-}
-function cerrarAdmin(){document.getElementById("adminPanel").style.display="none";}
-function actualizarAdmin(){
-  document.getElementById("adminProductos").innerText=productos.length;
-  let total=0, items=0;
-  Object.values(carrito).forEach(p=>{items+=p.cantidad||1; total+=(p.precio*(p.cantidad||1));});
-  document.getElementById("adminItems").innerText=items;
-  document.getElementById("adminTotal").innerText=total.toLocaleString();
-}
-function vaciarCarrito(){if(confirm("¿Seguro que querés vaciar el carrito?")){carrito={}; actualizarAdmin(); alert("Carrito vaciado");}}
-function exportarVentas(){const doc=new jsPDF(); doc.setFontSize(18); doc.text("Reporte de Ventas - Distribuidora Jazmín",20,20); let y=40; let total=0; Object.values(carrito).forEach(p=>{doc.text(`${p.producto} x${p.cantidad||1} - $${p.precio*(p.cantidad||1)}`,20,y); total+=p.precio*(p.cantidad||1); y+=10;}); doc.text("Total Facturación: $"+total,20,y+10); doc.save("Reporte-Ventas.pdf");}
+document.getElementById("buscador").addEventListener("input",mostrar);
 
-// --- Admin editar productos ---
-function cargarSelectAdmin() {
-  const sel = document.getElementById("adminSelectProducto");
-  sel.innerHTML = `<option value="">Seleccionar producto</option>`;
-  todos.forEach(p => {
-    sel.innerHTML += `<option value="${p.codigo}">${p.producto} (${p.codigo})</option>`;
-  });
-}
-
-document.getElementById("adminSelectProducto").addEventListener("change", function(){
-  const codigo = this.value;
-  if(!codigo) return;
-  const p = todos.find(x => x.codigo===codigo);
-  if(!p) return;
-  document.getElementById("adminPrecio").value = p.precio;
-  document.getElementById("adminEstado").value = p.estado || "DISPONIBLE";
-});
-
-async function actualizarProducto(codigo, precio, estado, sheet){
-  try {
-    const payload = { 
-      sheet: sheet, 
-      productos: [ { codigo, precio, estado } ] 
-    };
-    const res = await fetch("https://script.google.com/macros/s/AKfycbxZN8DYIOiYgVJErJ12BMxg1y9BLNgzwKX3Lai6tHLMfTxWNbnd7n1GgXQTf-jrnZBe/exec", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    return data;
-  } catch(err){
-    console.error(err);
-    return { error: err.message };
-  }
-}
-async function guardarCambios(){
-  const codigo = document.getElementById("adminSelectProducto").value;
-  const precio = Number(document.getElementById("adminPrecio").value);
-  const estado = document.getElementById("adminEstado").value;
-  if(!codigo || !precio) { alert("Seleccioná producto y precio válido"); return; }
-
-  const sheet = productosBebidas.find(p => p.codigo===codigo) ? "bebidas" : "almacen";
-  const result = await actualizarProducto(codigo, precio, estado, sheet);
-  
-  if(result.resultados && result.resultados[0].status==="ok"){
-    document.getElementById("adminMsg").innerText = "Producto actualizado correctamente ✅";
-    // Actualizamos en memoria también para reflejar en la app sin recargar
-    const prod = todos.find(p => p.codigo===codigo);
-    if(prod){ prod.precio = precio; prod.estado = estado; }
-    mostrar();
-    actualizarAdmin();
-  } else {
-    document.getElementById("adminMsg").innerText = "Error al actualizar producto ❌";
-  }
-}
-
-document.getElementById("buscador").addEventListener("input", mostrar);
-btnBebidas.onclick = () => {
-  productos = productosBebidas;
+btnBebidas.onclick=()=>{
+  productos=productosBebidas;
   btnBebidas.classList.add("activo");
   btnAlmacen.classList.remove("activo");
   mostrar();
 };
 
-btnAlmacen.onclick = () => {
-  productos = productosAlmacen;
+btnAlmacen.onclick=()=>{
+  productos=productosAlmacen;
   btnAlmacen.classList.add("activo");
   btnBebidas.classList.remove("activo");
   mostrar();
 };
 
-// Función inicial para cargar datos y actualizar carrito
-async function init() {
-  await cargarDatos(); // espera que los datos se carguen
-  actualizar();        // actualiza el carrito y totales
+async function init(){
+  await cargarDatos();
+  actualizar();
 }
 
-// Llamamos init para que todo cargue al abrir la página
 init();
 </script>
