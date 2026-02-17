@@ -291,432 +291,6 @@ margin-top:20px;
 <p><strong>Total Facturación:</strong> $<span id="adminTotal"></span></p>
 <button class="btn" onclick="vaciarCarrito()">Vaciar Carrito</button>
 <button class="btn" onclick="exportarVentas()">Exportar PDF de Ventas</button>
-<button class="btn close-admin" onclick="cerrarAdmin()">Cerrar Panel</button>
-</div>
-</div>
-
-<script>
-const { jsPDF } = window.jspdf;
-const PASSWORD="Jazmin2026Admin";
-const SHEET_URL="2PACX-1vSl-xY9G3t_QhAVqLeA6ct9qBsG8q-BqIHyWkBXyU4g8wHRE1kAQDVgXI0MwOKtOp4GeeV3yYFRkxyL";
-let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
-const MINIMO_GENERAL=60000;
-const MINIMO_SANTO_TOME=80000;
-
-async function cargarDatos(){
-  const urlBebidas = `https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
-  const urlAlmacen = `https://opensheet.elk.sh/${SHEET_URL}/almacen`;
-  const [rB, rA] = await Promise.all([fetch(urlBebidas), fetch(urlAlmacen)]);
-  productosBebidas = await rB.json();
-  productosAlmacen = await rA.json();
-  todos = [...productosBebidas, ...productosAlmacen];
-  productos = productosBebidas;
-  mostrar();
-}
-
-function mostrar(){
-  const cont=document.getElementById("productos");
-  cont.innerHTML="";
-  const filtro=document.getElementById("buscador").value.toLowerCase();
-  let lista=filtro?todos.filter(p=>p.producto?.toLowerCase().includes(filtro)):productos;
-  lista.forEach(p=>{
-    if(!p.codigo||!p.producto||!p.precio) return;
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <h4>${p.producto}</h4>
-      <div class="precio">$${Number(p.precio).toLocaleString()}</div>
-      <div class="${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
-      <div class="controles">
-        <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
-        <span>${carrito[p.codigo]?.cantidad||0}</span>
-        <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
-      </div>
-    `;
-    cont.appendChild(div);
-  });
-}
-
-function cambiarCantidad(codigo,val){
-  const prod=todos.find(p=>p.codigo===codigo);
-  if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
-  carrito[codigo].cantidad+=val;
-  if(carrito[codigo].cantidad<=0) delete carrito[codigo];
-  actualizar();
-  mostrar();
-}
-
-function actualizar(){
-  let total=0,cant=0;
-  const lista=document.getElementById("listaCarrito");
-  lista.innerHTML="";
-  Object.values(carrito).forEach(p=>{
-    const sub=Number(p.precio)*p.cantidad;
-    total+=sub;
-    cant+=p.cantidad;
-    lista.innerHTML+=`
-    <div class="item-carrito">
-      <span style="flex:1;">${p.producto}</span>
-      <div class="control-carrito">
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">−</button>
-        <span class="cant-num">${p.cantidad}</span>
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
-        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
-      </div>
-    </div>`;
-  });
-  document.getElementById("contador").innerText=cant;
-  let envio=0;
-  let envioTexto="";
-  const tipo=document.getElementById("tipoEntrega").value;
-  const zona=document.getElementById("zona").value;
-  if(tipo==="coordinado") envioTexto="🤝 Entrega coordinada sin costo";
-  else {
-    if(zona==="santotome"){ envio=(total>=MINIMO_SANTO_TOME)?0:4000; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Santo Tomé: $4.000";}
-    else if(zona==="santafe"){ envio=(total>=MINIMO_GENERAL)?0:1500; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Santa Fe Capital: $1.500";}
-    else if(zona==="centro"){ envio=(total>=MINIMO_GENERAL)?0:2000; envioTexto=(envio===0)?"🚚 Envío GRATIS":"🚚 Zona Centro: $2.000";}
-    else envioTexto="Seleccionar zona";
-  }
-  document.getElementById("envioInfo").innerText=envioTexto;
-  let totalFinal=total+envio;
-  document.getElementById("total").innerText="Total: $"+totalFinal.toLocaleString();
-  document.getElementById("senia").innerText="Seña 50%: $"+Math.round(totalFinal*0.5).toLocaleString();
-}
-
-function eliminarProducto(codigo){
-  delete carrito[codigo];
-  actualizar();
-  mostrar();
-}
-
-function toggleCarrito(){document.getElementById("carrito").classList.toggle("abierto");}
-
-function confirmarPedido(){
-  if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
-  const tipo=document.getElementById("tipoEntrega").value;
-  const direccion=document.getElementById("direccion").value;
-  if(tipo==="domicilio" && direccion.trim()===""){alert("Ingresá dirección"); return;}
-  const totalNumero=parseInt(document.getElementById("total").innerText.replace(/\D/g,""));
-  const senia=Math.round(totalNumero*0.5);
-  const fecha=new Date().toLocaleString("es-AR");
-  const doc=new jsPDF();
-  doc.setFontSize(16);
-  doc.text("Distribuidora Jazmín",20,20);
-  doc.setFontSize(11);
-  doc.text("¡Gracias por confiar en nosotros!",20,30);
-  doc.text("Fecha: "+fecha,20,40);
-  let y=50;
-  Object.values(carrito).forEach(p=>{
-    let sub=Number(p.precio)*p.cantidad;
-    doc.text(`${p.producto} x${p.cantidad} - $${sub}`,20,y);
-    y+=8;
-  });
-  doc.text("Total: $"+totalNumero,20,y+10);
-  doc.text("Seña 50%: $"+senia,20,y+20);
-  doc.text("Alias: jazminonlineshop",20,y+30);
-  doc.text("CBU: 0000003100054608688074",20,y+40);
-  doc.save("Pedido_Jazmin.pdf");
-
-  let mensaje="Hola quiero hacer este pedido:%0A";
-  Object.values(carrito).forEach(p=>{
-    let sub=Number(p.precio)*p.cantidad;
-    mensaje+=`- ${p.producto} x${p.cantidad} - $${sub}%0A`;
-  });
-  mensaje+=`%0ATotal: $${totalNumero}%0ASeña 50%: $${senia}%0AFecha: ${fecha}`;
-  window.open(`https://wa.me/5493425695340?text=${mensaje}`);
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribuidora Jazmín - Premium</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-:root{
---primary:#00e676;
---dark:#111;
---bg:#1c1c1c;
---card:#1b1b1b;
---green:#28a745;
---red:#dc3545;
---white:#fff;
-}
-body{
-margin:0;
-font-family:'Poppins',sans-serif;
-background:var(--bg);
-color:var(--white);
-}
-header{
-display:flex;
-align-items:center;
-justify-content:center;
-gap:10px;
-background:var(--dark);
-padding:15px;
-font-size:22px;
-font-weight:bold;
-position:relative;
-cursor:pointer;
-}
-header img{
-width:45px;
-height:45px;
-border-radius:50%;
-}
-#contador{
-position:absolute;
-right:20px;
-top:15px;
-background:var(--primary);
-color:black;
-font-weight:bold;
-width:25px;
-height:25px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-nav{
-display:flex;
-justify-content:center;
-gap:12px;
-padding:12px;
-}
-nav button{
-padding:10px 18px;
-border:none;
-border-radius:25px;
-background:#2c2c2c;
-color:white;
-cursor:pointer;
-}
-nav button.activo{
-background:var(--primary);
-color:black;
-font-weight:bold;
-}
-input, select{
-display:block;
-margin:10px auto;
-padding:10px;
-width:90%;
-max-width:400px;
-border-radius:25px;
-border:none;
-background:#1f1f1f;
-color:white;
-}
-.productos{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-gap:15px;
-padding:15px;
-padding-bottom:300px;
-}
-.card{
-background:var(--card);
-padding:15px;
-border-radius:20px;
-text-align:center;
-box-shadow:0 6px 20px rgba(0,0,0,0.5);
-}
-.precio{color:var(--primary);font-weight:bold;}
-.sin{color:var(--red);}
-.disp{color:var(--green);}
-.controles{
-display:flex;
-justify-content:center;
-align-items:center;
-gap:10px;
-margin-top:8px;
-}
-.controles button{
-width:32px;
-height:32px;
-border:none;
-border-radius:50%;
-background:var(--primary);
-color:black;
-font-size:18px;
-cursor:pointer;
-}
-#btnFlotante{
-position:fixed;
-bottom:20px;
-right:20px;
-width:60px;
-height:60px;
-border-radius:50%;
-border:none;
-background:var(--primary);
-color:black;
-font-size:26px;
-box-shadow:0 8px 25px rgba(0,0,0,0.7);
-cursor:pointer;
-z-index:1100;
-}
-#carrito{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-height:80vh;
-background:var(--dark);
-border-top-left-radius:30px;
-border-top-right-radius:30px;
-box-shadow:0 -30px 80px rgba(0,0,0,0.95);
-transform:translateY(90%);
-transition:0.4s;
-display:flex;
-flex-direction:column;
-z-index:1000;
-}
-#carrito.abierto{transform:translateY(0);}
-.barra-arrastre{
-width:60px;
-height:6px;
-background:#555;
-border-radius:10px;
-margin:10px auto;
-cursor:pointer;
-}
-.carrito-contenido{
-flex:1;
-overflow-y:auto;
-padding:15px;
-}
-.item-carrito{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:8px;
-font-size:14px;
-}
-.carrito-footer{
-background:#1a1a1a;
-padding:12px;
-border-top:1px solid #333;
-}
-.carrito-footer select,
-.carrito-footer input{
-width:100%;
-margin-top:8px;
-padding:8px;
-border-radius:8px;
-border:none;
-}
-.carrito-footer button{
-margin-top:10px;
-width:100%;
-padding:10px;
-border:none;
-border-radius:20px;
-background:var(--primary);
-color:black;
-font-weight:bold;
-cursor:pointer;
-}
-.control-carrito{
-display:flex;
-align-items:center;
-gap:6px;
-}
-.btn-cant{
-width:28px;
-height:28px;
-border:none;
-border-radius:50%;
-background:var(--primary);
-color:black;
-font-weight:bold;
-cursor:pointer;
-}
-.cant-num{
-min-width:20px;
-text-align:center;
-font-weight:bold;
-}
-.btn-eliminar{
-background:var(--red);
-border:none;
-border-radius:50%;
-width:28px;
-height:28px;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
-/* Panel Admin */
-.panel-admin{
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:#111;color:white;
-display:none;
-padding:40px;
-z-index:2000;
-overflow:auto;
-}
-.admin-box{
-background:#222;padding:30px;border-radius:15px;max-width:600px;margin:auto;
-}
-.admin-box h2{margin-top:0;}
-.close-admin{
-background:var(--red);
-margin-top:20px;
-}
-</style>
-</head>
-<body>
-
-<header onclick="accesoAdmin()">
-<img src="https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg"> Distribuidora Jazmín
-<div id="contador">0</div>
-</header>
-
-<nav>
-<button id="btnBebidas" class="activo">Bebidas</button>
-<button id="btnAlmacen">Almacén</button>
-</nav>
-
-<input type="text" id="buscador" placeholder="Buscar producto...">
-<div class="productos" id="productos"></div>
-
-<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
-
-<div id="carrito">
-<div class="barra-arrastre" onclick="toggleCarrito()"></div>
-<div class="carrito-contenido" id="listaCarrito"></div>
-<div class="carrito-footer">
-<div id="total"></div>
-<div id="envioInfo"></div>
-<select id="tipoEntrega" onchange="actualizar()">
-<option value="domicilio">🚚 Entrega a domicilio</option>
-<option value="coordinado">🤝 Entrega coordinada</option>
-</select>
-<select id="zona" onchange="actualizar()">
-<option value="">Seleccionar zona</option>
-<option value="santafe">Santa Fe Capital</option>
-<option value="centro">Zona Centro</option>
-<option value="santotome">Santo Tomé</option>
-</select>
-<input type="text" id="direccion" placeholder="Dirección">
-<div id="senia"></div>
-<button onclick="confirmarPedido()">Confirmar Pedido</button>
-</div>
-</div>
-
-<!-- Panel Admin -->
-<div class="panel-admin" id="adminPanel">
-<div class="admin-box">
-<h2>Panel Privado - Admin</h2>
-<p><strong>Total Productos:</strong> <span id="adminProductos"></span></p>
-<p><strong>Total Items en Carrito:</strong> <span id="adminItems"></span></p>
-<p><strong>Total Facturación:</strong> $<span id="adminTotal"></span></p>
-<button class="btn" onclick="vaciarCarrito()">Vaciar Carrito</button>
-<button class="btn" onclick="exportarVentas()">Exportar PDF de Ventas</button>
 
 <hr style="margin:20px 0; border-color:#555;">
 <h3>Editar Productos</h3>
@@ -742,6 +316,13 @@ const SHEET_URL="2PACX-1vSl-xY9G3t_QhAVqLeA6ct9qBsG8q-BqIHyWkBXyU4g8wHRE1kAQDVgX
 let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
 const MINIMO_GENERAL=60000;
 const MINIMO_SANTO_TOME=80000;
+const btnBebidas = document.getElementById("btnBebidas");
+const btnAlmacen = document.getElementById("btnAlmacen");
+
+// --- Cargar carrito desde localStorage ---
+if(localStorage.getItem('carrito')){
+  carrito = JSON.parse(localStorage.getItem('carrito'));
+}
 
 async function cargarDatos(){
   const urlBebidas = `https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
@@ -770,7 +351,7 @@ function mostrar(){
       <div class="controles">
         <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
         <span>${carrito[p.codigo]?.cantidad||0}</span>
-        <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+        <button onclick="cambiarCantidad('${p.codigo}',1)" ${p.estado==="SIN STOCK"?"disabled":""}>+</button>
       </div>
     `;
     cont.appendChild(div);
@@ -779,9 +360,12 @@ function mostrar(){
 
 function cambiarCantidad(codigo,val){
   const prod=todos.find(p=>p.codigo===codigo);
+  if(!prod) return;
+  if(prod.estado==="SIN STOCK" && val>0) return;
   if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
   carrito[codigo].cantidad+=val;
   if(carrito[codigo].cantidad<=0) delete carrito[codigo];
+  localStorage.setItem('carrito', JSON.stringify(carrito));
   actualizar();
   mostrar();
 }
@@ -800,12 +384,13 @@ function actualizar(){
       <div class="control-carrito">
         <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">−</button>
         <span class="cant-num">${p.cantidad}</span>
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)" ${p.estado==="SIN STOCK"?"disabled":""}>+</button>
         <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
       </div>
     </div>`;
   });
   document.getElementById("contador").innerText=cant;
+  
   let envio=0;
   let envioTexto="";
   const tipo=document.getElementById("tipoEntrega").value;
@@ -825,6 +410,7 @@ function actualizar(){
 
 function eliminarProducto(codigo){
   delete carrito[codigo];
+  localStorage.setItem('carrito', JSON.stringify(carrito));
   actualizar();
   mostrar();
 }
@@ -834,8 +420,11 @@ function toggleCarrito(){document.getElementById("carrito").classList.toggle("ab
 function confirmarPedido(){
   if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
   const tipo=document.getElementById("tipoEntrega").value;
-  const direccion=document.getElementById("direccion").value;
-  if(tipo==="domicilio" && direccion.trim()===""){alert("Ingresá dirección"); return;}
+  const direccion=document.getElementById("direccion").value.trim();
+  const zona=document.getElementById("zona").value;
+  if(tipo==="domicilio" && direccion===""){alert("Ingresá dirección"); return;}
+  if(tipo==="domicilio" && zona===""){alert("Seleccioná zona"); return;}
+  
   const totalNumero=parseInt(document.getElementById("total").innerText.replace(/\D/g,""));
   const senia=Math.round(totalNumero*0.5);
   const fecha=new Date().toLocaleString("es-AR");
@@ -878,14 +467,21 @@ function accesoAdmin(){
 }
 function cerrarAdmin(){document.getElementById("adminPanel").style.display="none";}
 function actualizarAdmin(){
-  document.getElementById("adminProductos").innerText=productos.length;
+  document.getElementById("adminProductos").innerText=todos.length;
   let total=0, items=0;
   Object.values(carrito).forEach(p=>{items+=p.cantidad||1; total+=(p.precio*(p.cantidad||1));});
   document.getElementById("adminItems").innerText=items;
   document.getElementById("adminTotal").innerText=total.toLocaleString();
 }
-function vaciarCarrito(){if(confirm("¿Seguro que querés vaciar el carrito?")){carrito={}; actualizarAdmin(); alert("Carrito vaciado");}}
-function exportarVentas(){const doc=new jsPDF(); doc.setFontSize(18); doc.text("Reporte de Ventas - Distribuidora Jazmín",20,20); let y=40; let total=0; Object.values(carrito).forEach(p=>{doc.text(`${p.producto} x${p.cantidad||1} - $${p.precio*(p.cantidad||1)}`,20,y); total+=p.precio*(p.cantidad||1); y+=10;}); doc.text("Total Facturación: $"+total,20,y+10); doc.save("Reporte-Ventas.pdf");}
+function vaciarCarrito(){
+  if(confirm("¿Seguro que querés vaciar el carrito?")){
+    carrito = {}; 
+    localStorage.removeItem('carrito'); 
+    actualizar();        // <-- Actualiza la vista del carrito en la página
+    actualizarAdmin();   // <-- Actualiza los totales en admin
+    alert("Carrito vaciado");
+  }
+}
 
 // --- Admin editar productos ---
 function cargarSelectAdmin() {
@@ -896,15 +492,17 @@ function cargarSelectAdmin() {
   });
 }
 
+// Cuando se selecciona un producto en admin, cargamos sus datos
 document.getElementById("adminSelectProducto").addEventListener("change", function(){
   const codigo = this.value;
   if(!codigo) return;
-  const p = todos.find(x => x.codigo===codigo);
+  const p = todos.find(x => x.codigo === codigo);
   if(!p) return;
   document.getElementById("adminPrecio").value = p.precio;
   document.getElementById("adminEstado").value = p.estado || "DISPONIBLE";
 });
 
+// Función para actualizar producto en Google Sheets mediante Web App
 async function actualizarProducto(codigo, precio, estado, sheet){
   try {
     const payload = { 
@@ -922,6 +520,8 @@ async function actualizarProducto(codigo, precio, estado, sheet){
     return { error: err.message };
   }
 }
+
+// Guardar cambios desde panel admin
 async function guardarCambios(){
   const codigo = document.getElementById("adminSelectProducto").value;
   const precio = Number(document.getElementById("adminPrecio").value);
@@ -943,7 +543,10 @@ async function guardarCambios(){
   }
 }
 
+// Buscar productos mientras se escribe
 document.getElementById("buscador").addEventListener("input", mostrar);
+
+// Cambio de categoría Bebidas/Almacén
 btnBebidas.onclick = () => {
   productos = productosBebidas;
   btnBebidas.classList.add("activo");
@@ -957,7 +560,10 @@ btnAlmacen.onclick = () => {
   btnBebidas.classList.remove("activo");
   mostrar();
 };
-cargarDatos();
-</script>
-</body>
-</html>
+
+// Carga inicial de datos y actualización del carrito
+async function init() {
+  await cargarDatos();
+  actualizar();
+}
+init();
