@@ -316,13 +316,6 @@ const SHEET_URL="2PACX-1vSl-xY9G3t_QhAVqLeA6ct9qBsG8q-BqIHyWkBXyU4g8wHRE1kAQDVgX
 let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
 const MINIMO_GENERAL=60000;
 const MINIMO_SANTO_TOME=80000;
-const btnBebidas = document.getElementById("btnBebidas");
-const btnAlmacen = document.getElementById("btnAlmacen");
-
-// --- Cargar carrito desde localStorage ---
-if(localStorage.getItem('carrito')){
-  carrito = JSON.parse(localStorage.getItem('carrito'));
-}
 
 async function cargarDatos(){
   const urlBebidas = `https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
@@ -351,7 +344,7 @@ function mostrar(){
       <div class="controles">
         <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
         <span>${carrito[p.codigo]?.cantidad||0}</span>
-        <button onclick="cambiarCantidad('${p.codigo}',1)" ${p.estado==="SIN STOCK"?"disabled":""}>+</button>
+        <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
       </div>
     `;
     cont.appendChild(div);
@@ -360,12 +353,9 @@ function mostrar(){
 
 function cambiarCantidad(codigo,val){
   const prod=todos.find(p=>p.codigo===codigo);
-  if(!prod) return;
-  if(prod.estado==="SIN STOCK" && val>0) return;
   if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
   carrito[codigo].cantidad+=val;
   if(carrito[codigo].cantidad<=0) delete carrito[codigo];
-  localStorage.setItem('carrito', JSON.stringify(carrito));
   actualizar();
   mostrar();
 }
@@ -384,13 +374,12 @@ function actualizar(){
       <div class="control-carrito">
         <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">−</button>
         <span class="cant-num">${p.cantidad}</span>
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)" ${p.estado==="SIN STOCK"?"disabled":""}>+</button>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
         <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
       </div>
     </div>`;
   });
   document.getElementById("contador").innerText=cant;
-  
   let envio=0;
   let envioTexto="";
   const tipo=document.getElementById("tipoEntrega").value;
@@ -410,7 +399,6 @@ function actualizar(){
 
 function eliminarProducto(codigo){
   delete carrito[codigo];
-  localStorage.setItem('carrito', JSON.stringify(carrito));
   actualizar();
   mostrar();
 }
@@ -420,11 +408,8 @@ function toggleCarrito(){document.getElementById("carrito").classList.toggle("ab
 function confirmarPedido(){
   if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
   const tipo=document.getElementById("tipoEntrega").value;
-  const direccion=document.getElementById("direccion").value.trim();
-  const zona=document.getElementById("zona").value;
-  if(tipo==="domicilio" && direccion===""){alert("Ingresá dirección"); return;}
-  if(tipo==="domicilio" && zona===""){alert("Seleccioná zona"); return;}
-  
+  const direccion=document.getElementById("direccion").value;
+  if(tipo==="domicilio" && direccion.trim()===""){alert("Ingresá dirección"); return;}
   const totalNumero=parseInt(document.getElementById("total").innerText.replace(/\D/g,""));
   const senia=Math.round(totalNumero*0.5);
   const fecha=new Date().toLocaleString("es-AR");
@@ -467,21 +452,14 @@ function accesoAdmin(){
 }
 function cerrarAdmin(){document.getElementById("adminPanel").style.display="none";}
 function actualizarAdmin(){
-  document.getElementById("adminProductos").innerText=todos.length;
+  document.getElementById("adminProductos").innerText=productos.length;
   let total=0, items=0;
   Object.values(carrito).forEach(p=>{items+=p.cantidad||1; total+=(p.precio*(p.cantidad||1));});
   document.getElementById("adminItems").innerText=items;
   document.getElementById("adminTotal").innerText=total.toLocaleString();
 }
-function vaciarCarrito(){
-  if(confirm("¿Seguro que querés vaciar el carrito?")){
-    carrito = {}; 
-    localStorage.removeItem('carrito'); 
-    actualizar();        // <-- Actualiza la vista del carrito en la página
-    actualizarAdmin();   // <-- Actualiza los totales en admin
-    alert("Carrito vaciado");
-  }
-}
+function vaciarCarrito(){if(confirm("¿Seguro que querés vaciar el carrito?")){carrito={}; actualizarAdmin(); alert("Carrito vaciado");}}
+function exportarVentas(){const doc=new jsPDF(); doc.setFontSize(18); doc.text("Reporte de Ventas - Distribuidora Jazmín",20,20); let y=40; let total=0; Object.values(carrito).forEach(p=>{doc.text(`${p.producto} x${p.cantidad||1} - $${p.precio*(p.cantidad||1)}`,20,y); total+=p.precio*(p.cantidad||1); y+=10;}); doc.text("Total Facturación: $"+total,20,y+10); doc.save("Reporte-Ventas.pdf");}
 
 // --- Admin editar productos ---
 function cargarSelectAdmin() {
@@ -492,17 +470,15 @@ function cargarSelectAdmin() {
   });
 }
 
-// Cuando se selecciona un producto en admin, cargamos sus datos
 document.getElementById("adminSelectProducto").addEventListener("change", function(){
   const codigo = this.value;
   if(!codigo) return;
-  const p = todos.find(x => x.codigo === codigo);
+  const p = todos.find(x => x.codigo===codigo);
   if(!p) return;
   document.getElementById("adminPrecio").value = p.precio;
   document.getElementById("adminEstado").value = p.estado || "DISPONIBLE";
 });
 
-// Función para actualizar producto en Google Sheets mediante Web App
 async function actualizarProducto(codigo, precio, estado, sheet){
   try {
     const payload = { 
@@ -520,8 +496,6 @@ async function actualizarProducto(codigo, precio, estado, sheet){
     return { error: err.message };
   }
 }
-
-// Guardar cambios desde panel admin
 async function guardarCambios(){
   const codigo = document.getElementById("adminSelectProducto").value;
   const precio = Number(document.getElementById("adminPrecio").value);
@@ -543,10 +517,7 @@ async function guardarCambios(){
   }
 }
 
-// Buscar productos mientras se escribe
 document.getElementById("buscador").addEventListener("input", mostrar);
-
-// Cambio de categoría Bebidas/Almacén
 btnBebidas.onclick = () => {
   productos = productosBebidas;
   btnBebidas.classList.add("activo");
@@ -561,9 +532,12 @@ btnAlmacen.onclick = () => {
   mostrar();
 };
 
-// Carga inicial de datos y actualización del carrito
+// Función inicial para cargar datos y actualizar carrito
 async function init() {
-  await cargarDatos();
-  actualizar();
+  await cargarDatos(); // espera que los datos se carguen
+  actualizar();        // actualiza el carrito y totales
 }
+
+// Llamamos init para que todo cargue al abrir la página
 init();
+</script>
