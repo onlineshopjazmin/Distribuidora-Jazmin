@@ -281,6 +281,27 @@ margin-top:20px;
 <input type="text" id="buscador" placeholder="Buscar producto...">
 <div class="productos" id="productos"></div>
 
+<!-- Botón flotante de WhatsApp -->
+<button id="btnWhatsApp" onclick="whatsappFlotante()" 
+        style="
+        position:fixed;
+        bottom:100px;   /* encima del carrito */
+        right:20px;
+        width:60px;
+        height:60px;
+        border-radius:50%;
+        border:none;
+        background:#25D366;
+        color:white;
+        font-size:26px;
+        box-shadow:0 8px 25px rgba(0,0,0,0.7);
+        cursor:pointer;
+        z-index:1100;
+        ">
+📲
+</button>
+
+<!-- Botón flotante del carrito -->
 <button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
 
 <div id="carrito">
@@ -306,7 +327,7 @@ margin-top:20px;
 <hr style="margin:15px 0;border-color:#333;">
 
 <button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
-💳 Pagar con Mercado Pago (6,42% recargo)
+💳 Pagar con Link Mercado Pago (6,42% recargo)
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
@@ -365,7 +386,7 @@ function pagarMercadoPago(){
 
   let total = calcularTotalActual();
 
-  // aplicar 6,42% SOLO a Mercado Pago
+  // aplicar 6,42% SOLO a Mercado Pago Link
   let recargo = total * 0.0642;
   let totalFinal = total + recargo;
 
@@ -504,7 +525,8 @@ function actualizar(){
   lista.innerHTML="";
 
   Object.values(carrito).forEach(p=>{
-    const sub=Number(p.precio)*p.cantidad;
+    const precioUnit = calcularPrecioFinal(p,p.cantidad);
+const sub = precioUnit * p.cantidad;
     total+=sub;
     cant+=p.cantidad;
 
@@ -525,13 +547,27 @@ function actualizar(){
   let totalFinal = total;
 
 document.getElementById("detallePago").innerHTML =
-  "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago tiene 6,42% extra.</span>";
+  "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago link tiene 6,42% extra.</span>";
 
 document.getElementById("total").innerHTML =
   "Total productos: $" + total.toLocaleString();
+  
+// 🔹 Calcular envío
+const envio = calcularEnvio(total);
+let totalConEnvio = total;
+
+if(envio.ok){
+  totalConEnvio += envio.costo; // sumar el envío al total
+  envioDiv.innerHTML = "<span style='color:lightgreen;'>" + envio.mensaje + "</span>";
+}else{
+  envioDiv.innerHTML = "<span style='color:#ff6b6b;'>" + envio.mensaje + "</span>";
 }
 
+// Mostrar total incluyendo envío
+document.getElementById("total").innerHTML =
+  "Total productos + envío: $" + totalConEnvio.toLocaleString();
 
+}
 function eliminarProducto(codigo){
   delete carrito[codigo];
   actualizar();
@@ -599,7 +635,7 @@ init();
 const WHATSAPP_NUMERO="543425695340";
 const LINK_MP="https://link.mercadopago.com.ar/distribuidorajazmin";
 const MP_RECARGO=1.0642; // 6,42%
-const ALIAS="jazmín online shop";
+const ALIAS="jazminonlineshop";
 const CBU="0000003100054608688074";
 const FRASE_CONFIANZA="Gracias por confiar en Distribuidora Jazmín. Calidad, compromiso y confianza en cada entrega.";
 
@@ -620,14 +656,24 @@ function calcularPrecioFinal(producto,cantidad){
 ========================= */
 
 function calcularEnvio(total){
-  const zona=document.getElementById("zona")?.value;
-  if(zona==="santotome" && total < MINIMO_SANTO_TOME){
-    return {ok:false,mensaje:"El mínimo para Santo Tomé es $"+MINIMO_SANTO_TOME.toLocaleString()};
+  const zona = document.getElementById("zona")?.value;
+  let costoEnvio = 0;
+  let mensaje = "";
+
+  if(zona === "santafe"){
+    costoEnvio = 1500; // Santa Fe Capital
+    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+  } else if(zona === "centro"){
+    costoEnvio = 2000; // Zona Centro
+    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+  } else if(zona === "santotome"){
+    costoEnvio = 4000; // Santo Tomé
+    mensaje = "Costo de envío: $" + costoEnvio.toLocaleString();
+  } else {
+    mensaje = "Seleccione una zona para calcular envío";
   }
-  if(total < MINIMO_GENERAL){
-    return {ok:false,mensaje:"El mínimo de compra es $"+MINIMO_GENERAL.toLocaleString()};
-  }
-  return {ok:true,mensaje:"Envío aprobado ✔"};
+
+  return {ok: zona ? true : false, mensaje, costo: costoEnvio};
 }
 
 /* =========================
@@ -682,14 +728,55 @@ function enviarWhatsApp(totalFinal){
   let mensaje="Hola Distribuidora Jazmín 👋%0A";
   mensaje+="Quiero confirmar el siguiente pedido:%0A%0A";
 
+  // Listado de productos
   Object.values(carrito).forEach(p=>{
     mensaje+=`- ${p.producto} x${p.cantidad}%0A`;
   });
 
-  mensaje+=`%0ATotal: $${totalFinal.toLocaleString()}%0A`;
+  mensaje+=`%0ATotal (incluyendo envío): $${totalFinal.toLocaleString()}%0A`;
   mensaje+=`Forma de pago: ${document.getElementById("tipoPagoExtra")?.value==="50"?"Seña 50%":"Pago total"}%0A`;
   mensaje+="Muchas gracias!";
 
+  window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${mensaje}`);
+}
+/* =========================
+   📲 BOTÓN FLOTANTE WHATSAPP
+========================= */
+
+// Función que calcula el total incluyendo envío y abre WhatsApp
+function whatsappFlotante(){
+  // 1️⃣ Recalcular total de productos
+  let total = 0;
+  Object.values(carrito).forEach(p => {
+    total += Number(p.precio) * p.cantidad;
+  });
+
+  // 2️⃣ Calcular envío según zona seleccionada
+  const envio = calcularEnvio(total);
+  let totalConEnvio = total;
+  if(envio.ok){
+    totalConEnvio += envio.costo;
+  }
+
+  // 3️⃣ Llamar a la función que genera el mensaje y abre WhatsApp
+  enviarWhatsApp(totalConEnvio);
+}
+
+// Función que construye el mensaje y abre WhatsApp
+function enviarWhatsApp(totalFinal){
+  let mensaje = "Hola Distribuidora Jazmín 👋%0A";
+  mensaje += "Quiero confirmar el siguiente pedido:%0A%0A";
+
+  // Listado de productos del carrito
+  Object.values(carrito).forEach(p => {
+    mensaje += `- ${p.producto} x${p.cantidad}%0A`;
+  });
+
+  mensaje += `%0ATotal (incluyendo envío): $${totalFinal.toLocaleString()}%0A`;
+  mensaje += `Forma de pago: ${document.getElementById("tipoPagoExtra")?.value === "50" ? "Seña 50%" : "Pago total"}%0A`;
+  mensaje += "Muchas gracias!";
+
+  // Abrir WhatsApp en nueva pestaña con el mensaje
   window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${mensaje}`);
 }
 
@@ -761,11 +848,20 @@ function vaciarCarrito(){
 }
 
 function exportarVentas(){
+  // recalculamos total productos
   let total=0;
   Object.values(carrito).forEach(p=>{
     total+=Number(p.precio)*p.cantidad;
   });
-  generarPDFProfesional(total);
+
+  // calculamos el envío según zona
+  const envio = calcularEnvio(total);
+  let totalConEnvio = total;
+  if(envio.ok){
+    totalConEnvio += envio.costo;
+  }
+
+  generarPDFProfesional(totalConEnvio);
 }
 
 /* =========================
@@ -794,4 +890,24 @@ function animarCarritoIcono(){
     icono.style.transform="scale(1)";
   },200);
 }
-  </script>
+function cambiarCantidad(codigo, cambio){
+  const producto = todos.find(p => p.codigo === codigo);
+  if(!producto) return;
+
+  if(!carrito[codigo]){
+    if(cambio > 0){
+      carrito[codigo] = {...producto, cantidad:1};
+    }
+  }else{
+    carrito[codigo].cantidad += cambio;
+
+    if(carrito[codigo].cantidad <= 0){
+      delete carrito[codigo];
+    }
+  }
+
+  actualizar();
+  mostrar();
+}
+
+</script>
