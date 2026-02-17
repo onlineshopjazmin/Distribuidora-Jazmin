@@ -123,6 +123,7 @@ font-size:18px;
 cursor:pointer;
 }
 
+/* BOTÓN FLOTANTE */
 #btnFlotante{
 position:fixed;
 bottom:20px;
@@ -139,6 +140,7 @@ cursor:pointer;
 z-index:1100;
 }
 
+/* CARRITO */
 #carrito{
 position:fixed;
 bottom:0;
@@ -156,12 +158,31 @@ flex-direction:column;
 z-index:1000;
 }
 
-#carrito.abierto{transform:translateY(0);}
+#carrito.abierto{
+transform:translateY(0);
+}
+
+.barra-arrastre{
+width:60px;
+height:6px;
+background:#555;
+border-radius:10px;
+margin:10px auto;
+cursor:pointer;
+}
 
 .carrito-contenido{
 flex:1;
 overflow-y:auto;
 padding:15px;
+}
+
+.item-carrito{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:8px;
+font-size:14px;
 }
 
 .carrito-footer{
@@ -178,6 +199,40 @@ border:none;
 border-radius:20px;
 background:#00e676;
 color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+.control-carrito{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.btn-cant{
+width:28px;
+height:28px;
+border:none;
+border-radius:50%;
+background:#00e676;
+color:black;
+font-weight:bold;
+cursor:pointer;
+}
+
+.cant-num{
+min-width:20px;
+text-align:center;
+font-weight:bold;
+}
+
+.btn-eliminar{
+background:#ff5252;
+border:none;
+border-radius:50%;
+width:28px;
+height:28px;
+color:white;
 font-weight:bold;
 cursor:pointer;
 }
@@ -203,10 +258,11 @@ Distribuidora Jazmín
 <button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
 
 <div id="carrito">
+<div class="barra-arrastre" onclick="toggleCarrito()"></div>
+
 <div class="carrito-contenido" id="listaCarrito"></div>
 
 <div class="carrito-footer">
-
 <div id="total"></div>
 <div id="envioInfo"></div>
 
@@ -225,7 +281,6 @@ Distribuidora Jazmín
 <input type="text" id="direccion" placeholder="Dirección">
 
 <div id="senia"></div>
-
 <button onclick="confirmarPedido()">Confirmar Pedido</button>
 </div>
 </div>
@@ -233,60 +288,31 @@ Distribuidora Jazmín
 <script>
 const { jsPDF } = window.jspdf;
 
-const SHEET_ID="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
-const BEBIDAS="bebidas";
-const ALMACEN="almacen";
-
 let productosBebidas=[], productosAlmacen=[], productos=[], todos=[], carrito={};
+const MINIMO_GENERAL=60000;
+const MINIMO_SANTO_TOME=80000;
 
-const MINIMO_GENERAL = 60000;
-const MINIMO_SANTO_TOME = 80000;
+function toggleCarrito(){
+document.getElementById("carrito").classList.toggle("abierto");
+}
 
-async function cargarDatos(){
-const url1=`https://opensheet.elk.sh/${SHEET_ID}/${BEBIDAS}`;
-const url2=`https://opensheet.elk.sh/${SHEET_ID}/${ALMACEN}`;
-const [r1,r2]=await Promise.all([fetch(url1),fetch(url2)]);
-productosBebidas=await r1.json();
-productosAlmacen=await r2.json();
-todos=[...productosBebidas,...productosAlmacen];
-productos=productosBebidas;
+function eliminarProducto(codigo){
+delete carrito[codigo];
+actualizar();
 mostrar();
 }
 
-function mostrar(){
-const cont=document.getElementById("productos");
-cont.innerHTML="";
-const filtro=document.getElementById("buscador").value.toLowerCase();
-let lista=filtro?todos.filter(p=>p.producto?.toLowerCase().includes(filtro)):productos;
-
-lista.forEach(p=>{
-if(!p.codigo||!p.producto||!p.precio) return;
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`
-<h4>${p.producto}</h4>
-<div class="precio">$${Number(p.precio).toLocaleString()}</div>
-<div class="${p.estado==="SIN STOCK"?"sin":"disp"}">${p.estado||"DISPONIBLE"}</div>
-<div class="controles">
-<button onclick="cambiar('${p.codigo}',-1)">-</button>
-<span>${carrito[p.codigo]?.cantidad||0}</span>
-<button onclick="cambiar('${p.codigo}',1)">+</button>
-</div>`;
-cont.appendChild(div);
-});
-}
-
-function cambiar(codigo,val){
-const prod=todos.find(p=>p.codigo===codigo);
-if(!carrito[codigo]) carrito[codigo]={...prod,cantidad:0};
+function cambiarCantidadCarrito(codigo,val){
+if(carrito[codigo]){
 carrito[codigo].cantidad+=val;
 if(carrito[codigo].cantidad<=0) delete carrito[codigo];
 actualizar();
 mostrar();
 }
+}
 
 function actualizar(){
-let total=0, cant=0;
+let total=0,cant=0;
 const lista=document.getElementById("listaCarrito");
 lista.innerHTML="";
 
@@ -294,7 +320,18 @@ Object.values(carrito).forEach(p=>{
 const sub=Number(p.precio)*p.cantidad;
 total+=sub;
 cant+=p.cantidad;
-lista.innerHTML+=`<div>${p.producto} x${p.cantidad} - $${sub.toLocaleString()}</div>`;
+
+lista.innerHTML+=`
+<div class="item-carrito">
+<span style="flex:1;">${p.producto}</span>
+
+<div class="control-carrito">
+<button class="btn-cant" onclick="cambiarCantidadCarrito('${p.codigo}',-1)">−</button>
+<span class="cant-num">${p.cantidad}</span>
+<button class="btn-cant" onclick="cambiarCantidadCarrito('${p.codigo}',1)">+</button>
+<button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">✕</button>
+</div>
+</div>`;
 });
 
 document.getElementById("contador").innerText=cant;
@@ -305,89 +342,26 @@ const tipo=document.getElementById("tipoEntrega").value;
 const zona=document.getElementById("zona").value;
 
 if(tipo==="coordinado"){
-document.getElementById("zona").style.display="none";
-document.getElementById("direccion").style.display="none";
 envioTexto="🤝 Entrega coordinada sin costo";
 }else{
-
-document.getElementById("zona").style.display="block";
-document.getElementById("direccion").style.display="block";
-
-let minimo = (zona==="santotome") ? MINIMO_SANTO_TOME : MINIMO_GENERAL;
+let minimo=(zona==="santotome")?MINIMO_SANTO_TOME:MINIMO_GENERAL;
 
 if(total>=minimo){
-envio=0;
 envioTexto="🚚 Envío GRATIS";
 }else{
-
-if(zona==="centro"){ envio=2500; envioTexto="🚚 Zona Centro: $2.500";}
-else if(zona==="santotome"){ envio=4000; envioTexto="🚚 Santo Tomé: $4.000 (Gratis desde $80.000)";}
-else if(zona==="santafe"){ envio=1500; envioTexto="🚚 Santa Fe Capital: $1.500";}
-else{ envioTexto="Seleccionar zona";}
+if(zona==="centro"){envio=2500;envioTexto="🚚 Zona Centro: $2.500";}
+else if(zona==="santotome"){envio=4000;envioTexto="🚚 Santo Tomé: $4.000";}
+else if(zona==="santafe"){envio=1500;envioTexto="🚚 Santa Fe Capital: $1.500";}
+else envioTexto="Seleccionar zona";
 }
 }
 
-document.getElementById("envioInfo").innerHTML=envioTexto;
-
+document.getElementById("envioInfo").innerText=envioTexto;
 let totalFinal=total+envio;
 document.getElementById("total").innerText="Total: $"+totalFinal.toLocaleString();
-let senia=Math.round(totalFinal*0.5);
-document.getElementById("senia").innerText="Seña 50%: $"+senia.toLocaleString();
+document.getElementById("senia").innerText="Seña 50%: $"+Math.round(totalFinal*0.5).toLocaleString();
 }
-
-function confirmarPedido(){
-if(Object.keys(carrito).length===0){alert("Carrito vacío");return;}
-
-let tipo=document.getElementById("tipoEntrega").value;
-let zona=document.getElementById("zona").value;
-let direccion=document.getElementById("direccion").value.trim();
-
-if(tipo==="domicilio"){
-if(zona===""){alert("Seleccioná una zona");return;}
-if(direccion===""){alert("Ingresá dirección");return;}
-}
-
-let totalTexto=document.getElementById("total").innerText;
-let totalNumero=parseInt(totalTexto.replace(/\D/g,""));
-let senia=Math.round(totalNumero*0.5);
-let fecha=new Date().toLocaleString("es-AR");
-let envioTexto=document.getElementById("envioInfo").innerText;
-
-const doc=new jsPDF();
-doc.setFontSize(14);
-doc.text("Distribuidora Jazmín",20,20);
-doc.text("Fecha: "+fecha,20,30);
-
-let y=40;
-
-Object.values(carrito).forEach(p=>{
-let sub=Number(p.precio)*p.cantidad;
-doc.text(`${p.producto} x${p.cantidad} - $${sub.toLocaleString()}`,20,y);
-y+=8;
-});
-
-doc.text(envioTexto,20,y+5);
-doc.text("Total: $"+totalNumero.toLocaleString(),20,y+15);
-doc.text("Seña 50%: $"+senia.toLocaleString(),20,y+25);
-
-doc.save("Pedido_Distribuidora_Jazmin.pdf");
-
-let mensaje="Hola, te envío mi pedido.%0A";
-Object.values(carrito).forEach(p=>{
-let sub=Number(p.precio)*p.cantidad;
-mensaje+=`- ${p.producto} x${p.cantidad} - $${sub}%0A`;
-});
-mensaje+=`%0A${envioTexto}%0ATotal: $${totalNumero}%0ASeña 50%: $${senia}%0AFecha: ${fecha}`;
-
-window.open(`https://wa.me/5493425695340?text=${mensaje}`);
-}
-
-document.getElementById("buscador").addEventListener("input",mostrar);
-btnBebidas.onclick=()=>{productos=productosBebidas;btnBebidas.classList.add("activo");btnAlmacen.classList.remove("activo");mostrar();}
-btnAlmacen.onclick=()=>{productos=productosAlmacen;btnAlmacen.classList.add("activo");btnBebidas.classList.remove("activo");mostrar();}
-
-cargarDatos();
 </script>
 
 </body>
-</html>
+  </html>
