@@ -298,11 +298,11 @@ margin-top:20px;
         cursor:pointer;
         z-index:1100;
         ">
-
+📱
 </button>
 
 <!-- Botón flotante del carrito -->
-<button id="btnFlotante" onclick="toggleCarrito()"></button>
+<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
 
 <div id="carrito">
 <div class="barra-arrastre" onclick="toggleCarrito()"></div>
@@ -312,8 +312,8 @@ margin-top:20px;
 <div id="detallePago" style="margin-top:8px;font-weight:bold;"></div>
 <div id="envioInfo"></div>
 <select id="tipoEntrega" onchange="actualizar()">
-<option value="domicilio"> Entrega a domicilio</option>
-<option value="coordinado"> Entrega coordinada</option>
+  <option value="domicilio">🏠 Entrega a domicilio</option>
+  <option value="coordinar_retiro">🏠 Coordinar retiro en domicilio con vendedor</option>
 </select>
 <select id="zona" onchange="actualizar()">
 <option value="">Seleccionar zona</option>
@@ -327,15 +327,15 @@ margin-top:20px;
 <hr style="margin:15px 0;border-color:#333;">
 
 <button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
- Pagar con Link Mercado Pago (6,42% recargo)
+💳 Pagar con Link Mercado Pago (6,42% recargo)
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
- Pagar por Alias (sin recargo)
+💰 Pagar por Alias (sin recargo)
 </button>
 
 <button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
- Transferencia CBU (sin recargo)
+🪙 Transferencia CBU (sin recargo)
 </button>
 </div>
 </div>
@@ -391,6 +391,7 @@ let totalProductos = calcularTotalActual();
 // 2️⃣ Calcular envío
 const envio = calcularEnvio(totalProductos);
 let subtotal = totalProductos;
+
 if(envio.ok){
   subtotal += envio.costo;
 }
@@ -398,6 +399,7 @@ if(envio.ok){
 // 3️⃣ Aplicar tipo de pago
 const tipoPago = document.getElementById("tipoPagoExtra")?.value || "100";
 let totalConPago = subtotal;
+
 if(tipoPago === "50"){
   totalConPago = subtotal * 0.5;
 }
@@ -498,7 +500,7 @@ async function cargarDatos(){
     productosBebidas = await rB.json();
     productosAlmacen = await rA.json();
 
-    // 🔧 LIMPIAR ESPACIOS EN CODIGOS (MUY IMPORTANTE)
+    // ⚡ LIMPIAR ESPACIOS EN CODIGOS (MUY IMPORTANTE)
     productosBebidas.forEach(p=>{
       if(p.codigo){
         p.codigo = p.codigo.trim();
@@ -567,19 +569,20 @@ function agregar(codigo){
   }
 
   actualizar();
-  mostrar();
-  animarCarritoIcono();
-  //  Animación visual
-  const card=document.querySelector(`[data-codigo="${codigo}"]`);
-  if(card){
-    card.classList.add("animAgregar");
-    setTimeout(()=>card.classList.remove("animAgregar"),300);
-  }
+mostrar();
+animarCarritoIcono();
 
-  //  Sonido
-  const audio=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
-  audio.volume=0.2;
-  audio.play();
+// ⚡ Animación visual al agregar producto
+const card = document.querySelector(`[data-codigo="${codigo}"]`);
+if(card){
+  card.classList.add("animAgregar");
+  setTimeout(() => card.classList.remove("animAgregar"), 300);
+}
+
+// 🔊 Sonido al agregar producto
+const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
+audio.volume = 0.2;
+audio.play();
 }
 
 function actualizar(){
@@ -599,10 +602,10 @@ const sub = precioUnit * p.cantidad;
     <div class="item-carrito">
       <span style="flex:1;">${p.producto}</span>
       <div class="control-carrito">
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">➖</button>
         <span class="cant-num">${p.cantidad}</span>
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
-        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')"></button>
+        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">➕</button>
+        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">❌</button>
       </div>
     </div>`;
   });
@@ -707,7 +710,7 @@ async function init(){
 
 init();
 /* =========================
-    CONFIGURACIONES EXTRA
+   ⚙️ CONFIGURACIONES EXTRA
 ========================= */
 
 const WHATSAPP_NUMERO="543425695340";
@@ -718,7 +721,7 @@ const CBU="0000003100054608688074";
 const FRASE_CONFIANZA="Gracias por confiar en Distribuidora Jazmín. Calidad, compromiso y confianza en cada entrega.";
 
 /* =========================
-    PRECIO MAYORISTA (6+ unidades)
+   💰 PRECIO MAYORISTA (6+ unidades)
 ========================= */
 
 function calcularPrecioFinal(producto,cantidad){
@@ -730,7 +733,7 @@ function calcularPrecioFinal(producto,cantidad){
 }
 
 /* =========================
-    ENVÍO INTELIGENTE
+   🚚  ENVÍO INTELIGENTE
 ========================= */
 
 function calcularEnvio(total){
@@ -739,20 +742,20 @@ const tipoEntregaElement = document.getElementById("tipoEntrega");
 
 const zona = zonaElement ? zonaElement.value : "";
 const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
-  if(tipoEntrega === "coordinado"){
-    return {
-      ok: true,
-      mensaje: "Entrega coordinada (sin costo de envío)",
-      costo: 0
-    };
-  }
+  if(tipoEntrega === "coordinar_retiro"){
+  return {
+    ok: true,
+    mensaje: "Entrega coordinada de retiro en domicilio con vendedor (sin costo de envío)",
+    costo: 0
+  };
+}
 
   let costoEnvio = 0;
   let mensaje = "";
 
   if(zona === "santafe"){
     if(total >= 100000){
-      mensaje = " Envío GRATIS en Santa Fe por superar $100.000";
+      mensaje = "🚚 Envío GRATIS en Santa Fe por superar $100.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 2000;
@@ -765,7 +768,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   } else if(zona === "santotome"){
     if(total >= 120000){
-      mensaje = " Envío GRATIS en Santo Tomé por superar $120.000";
+      mensaje = "🚚 Envío GRATIS en Santo Tomé por superar $120.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 6000;
@@ -781,7 +784,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 }
 
 /* =========================
-    OPCIÓN PAGO 50% o 100%
+   💵 OPCIÓN PAGO 50% o 100%
 ========================= */
 
 function calcularPago(total){
@@ -793,7 +796,7 @@ function calcularPago(total){
 }
 
 /* =========================
-    PDF PROFESIONAL MEJORADO
+   📄 PDF PROFESIONAL MEJORADO
 ========================= */
 
 function generarPDFProfesional(totalFinal){
@@ -825,7 +828,7 @@ function generarPDFProfesional(totalFinal){
 }
 
 /* =========================
-    WHATSAPP PROFESIONAL
+   💬 WHATSAPP PROFESIONAL
 ========================= */
 
 function enviarWhatsApp(totalFinal){
@@ -833,7 +836,7 @@ function enviarWhatsApp(totalFinal){
   const pagoElement = document.getElementById("tipoPagoExtra");
   const tipoPago = pagoElement ? pagoElement.value : "100";
 
-  let mensaje="Hola Distribuidora Jazmín %0A";
+  let mensaje="Hola Distribuidora Jazmín 👋%0A";
   mensaje+="Quiero confirmar el siguiente pedido:%0A%0A";
 
   Object.values(carrito).forEach(p=>{
@@ -852,7 +855,7 @@ function enviarWhatsApp(totalFinal){
 
 
 /* =========================
-    BOTÓN FLOTANTE WHATSAPP
+   💬 BOTÓN FLOTANTE WHATSAPP
 ========================= */
 
 function whatsappFlotante(){
@@ -880,7 +883,7 @@ function whatsappFlotante(){
   enviarWhatsApp(totalConEnvio);
 }
 /* =========================
-    MERCADO PAGO CON RECARGO
+   💳 MERCADO PAGO CON RECARGO
 ========================= */
 
 function pagarConMP(total){
@@ -890,7 +893,7 @@ function pagarConMP(total){
 }
 
 /* =========================
-    PANEL ADMIN FUNCIONANDO
+   🛠️ PANEL ADMIN FUNCIONANDO
 ========================= */
 
 function accesoAdmin(){
@@ -936,7 +939,7 @@ function guardarCambios(){
   if(nuevoPrecio) prod.precio=nuevoPrecio;
   if(nuevoEstado) prod.estado=nuevoEstado;
 
-  document.getElementById("adminMsg").innerText="Producto actualizado correctamente ";
+  document.getElementById("adminMsg").innerText="Producto actualizado correctamente ✅";
   mostrar();
 }
 
@@ -964,7 +967,7 @@ function exportarVentas(){
 }
 
 /* =========================
-    AGREGAR SELECT PAGO DINÁMICO
+   💳 AGREGAR SELECT PAGO DINÁMICO
 ========================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
@@ -973,8 +976,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const selectPago=document.createElement("select");
   selectPago.id="tipoPagoExtra";
   selectPago.innerHTML=`
-    <option value="100"> Pagar total</option>
-    <option value="50"> Señar 50%</option>
+    <option value="100">💵 Pagar total</option>
+    <option value="50">💰 Señar 50%</option>
   `;
   selectPago.onchange = actualizar;
 footer.insertBefore(selectPago, footer.children[footer.children.length-1]);
