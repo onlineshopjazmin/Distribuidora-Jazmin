@@ -339,11 +339,11 @@ margin-top:20px;
         cursor:pointer;
         z-index:1100;
         ">
-
+📲
 </button>
 
 <!-- Botón flotante del carrito -->
-<button id="btnFlotante" onclick="toggleCarrito()"></button>
+<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
 
 <div id="carrito">
 <div class="barra-arrastre" onclick="toggleCarrito()"></div>
@@ -368,8 +368,8 @@ margin-top:20px;
 
 <!-- Tipo de pago -->
 <select id="tipoPagoExtra" onchange="actualizar()">
-  <option value="100"> Pagar total</option>
-  <option value="50"> Señar 50%</option>
+  <option value="100">💰 Pagar total</option>
+<option value="50">💵 Señar 50%</option>
 </select>
 
 <!-- Botón PDF -->
@@ -394,19 +394,19 @@ margin-top:20px;
     color:black;
     cursor:pointer;
     font-weight:bold;
-  "> Mostrar productos</button>
+  ">📦 Mostrar productos</button>
 </div>
 
 <button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
- Pagar con Link Mercado Pago (6,42% recargo)
+💳 Pagar con Link Mercado Pago (6,42% recargo)
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
- Pagar por Alias (sin recargo)
+🏦 Pagar por Alias (sin recargo)
 </button>
 
 <button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
- Transferencia CBU (sin recargo)
+💰 Transferencia CBU (sin recargo)
 </button>
 </div>
 </div>
@@ -638,9 +638,9 @@ async function cargarDatos(){
       ${mayorista}
       <div class="${p.estado === "SIN STOCK" ? "sin" : "disp"}">${p.estado || "DISPONIBLE"}</div>
       <div class="${controlesClass}">
-        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
+        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)">-1</button>
         <span class="cant-num ${aplicaMayorista ? 'mayorista' : ''}">${cantidadEnCarrito}</span>
-        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)"></button>
+        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
       </div>
     `;
     cont.appendChild(div);
@@ -662,7 +662,7 @@ function agregar(codigo){
 
   actualizar();
 mostrar();
-actualizarPrecioTarjeta(codigo);
+actualizarPrecioTarjeta(p.codigo);
 animarCarritoIcono();
 }
 
@@ -672,9 +672,12 @@ animarCarritoIcono();
     setTimeout(()=>card.classList.remove("animAgregar"),300);
   }
 
-  const audio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
-  audio.volume = 0.2;
-  audio.play();
+  const clickAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
+clickAudio.volume = 0.2;
+
+function reproducirClick() {
+  clickAudio.currentTime = 0;
+  clickAudio.play();
 }
 
 function actualizar(){
@@ -697,10 +700,10 @@ function actualizar(){
       <div class="item-carrito">
         <span style="flex:1;">${p.producto}${esMayorista ? ' (Mayorista 5%)' : ''}</span>
         <div class="control-carrito">
-          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
+          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
           <span class="cant-num ${esMayorista ? 'mayorista' : ''}">${p.cantidad}</span>
-          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)"></button>
-          <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')"></button>
+          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+          <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">🗑️</button>
         </div>
       </div>`;
   });
@@ -769,7 +772,11 @@ function confirmarPedido(){
   generarPDFProfesional(totalFinal);
 }
 
-document.getElementById("buscador").addEventListener("input",mostrar);
+let timer;
+document.getElementById("buscador").addEventListener("input", () => {
+  clearTimeout(timer);
+  timer = setTimeout(mostrar, 300);
+});
 
 const btnBebidas = document.getElementById("btnBebidas");
 const btnAlmacen = document.getElementById("btnAlmacen");
@@ -840,7 +847,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   if(zona === "santafe"){
     if(total >= 100000){
-      mensaje = " Envío GRATIS en Santa Fe por superar $100.000";
+      mensaje = "✅ Envío GRATIS en Santa Fe por superar $100.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 2000;
@@ -853,7 +860,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   } else if(zona === "santotome"){
     if(total >= 120000){
-      mensaje = " Envío GRATIS en Santo Tomé por superar $120.000";
+      mensaje = "✅ Envío GRATIS en Santo Tomé por superar $120.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 6000;
@@ -1156,11 +1163,11 @@ function actualizarListaCarrito() {
   if(listaExpandida){
     listaCarrito.style.maxHeight = "400px"; // altura expandida
     listaCarrito.style.overflowY = "auto";
-    btnDesplegarLista.innerText = " Listo";
+    btnDesplegarLista.innerText = "✅ Listo";
   } else {
     listaCarrito.style.maxHeight = "150px"; // altura compacta
     listaCarrito.style.overflow = "hidden";
-    btnDesplegarLista.innerText = " Mostrar productos";
+    btnDesplegarLista.innerText = "📦 Mostrar productos";
   }
 }
 
