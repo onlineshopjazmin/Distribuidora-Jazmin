@@ -277,7 +277,7 @@ margin-top:20px;
 .controles.mayorista button{
   border:2px solid #28a745;
 }
-/* Botones de cantidad ( y ) */
+/* Botones de cantidad (- y +) */
 .btn-cant {
   width: 32px;
   height: 32px;
@@ -339,7 +339,7 @@ margin-top:20px;
         cursor:pointer;
         z-index:1100;
         ">
-📲
+📱
 </button>
 
 <!-- Botón flotante del carrito -->
@@ -368,8 +368,8 @@ margin-top:20px;
 
 <!-- Tipo de pago -->
 <select id="tipoPagoExtra" onchange="actualizar()">
-  <option value="100">💰 Pagar total</option>
-<option value="50">💵 Señar 50%</option>
+<option value="100">💳 Pagar total</option>
+<option value="50">📝 Señar 50%</option>
 </select>
 
 <!-- Botón PDF -->
@@ -377,7 +377,7 @@ margin-top:20px;
 
 <!-- Botón WhatsApp -->
 <button onclick="enviarWhatsApp()">
- Confirmar por WhatsApp
+ Confirmar por WhatsApp
 </button>
 
 <div id="lineaDivisora" style="position:relative; text-align:center; margin:15px 0;">
@@ -402,11 +402,11 @@ margin-top:20px;
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
-🏦 Pagar por Alias (sin recargo)
+🟢 Pagar por Alias (sin recargo)
 </button>
 
 <button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
-💰 Transferencia CBU (sin recargo)
+🏦 Transferencia CBU (sin recargo)
 </button>
 </div>
 </div>
@@ -552,8 +552,8 @@ let productos=[];
 let todos=[];
 let carrito={};
 
-const MINIMO_GENERAL=60000;
-const MINIMO_SANTO_TOME=80000;
+const MINIMO_GENERAL=100000;
+const MINIMO_SANTO_TOME=120000;
 
 async function cargarDatos(){
   try{
@@ -646,7 +646,7 @@ async function cargarDatos(){
     cont.appendChild(div);
 
     // Actualizar indicador y precio si ya hay cantidad en carrito
-    actualizarPrecioTarjeta(p.codigo);
+   actualizarPrecioTarjeta(p.codigo);
   });
 } // FIN mostrar()
 
@@ -662,15 +662,10 @@ function agregar(codigo){
 
   actualizar();
 mostrar();
-actualizarPrecioTarjeta(p.codigo);
+actualizarPrecioTarjeta(codigo);
 animarCarritoIcono();
 }
 
-  const card = document.querySelector(`[data-codigo="${codigo}"]`);
-  if(card){
-    card.classList.add("animAgregar");
-    setTimeout(()=>card.classList.remove("animAgregar"),300);
-  }
 
   const clickAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
 clickAudio.volume = 0.2;
@@ -703,7 +698,7 @@ function actualizar(){
           <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
           <span class="cant-num ${esMayorista ? 'mayorista' : ''}">${p.cantidad}</span>
           <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)">+</button>
-          <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">🗑️</button>
+          <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">🗑</button>
         </div>
       </div>`;
   });
@@ -739,7 +734,6 @@ function actualizar(){
     document.getElementById("total").innerHTML =
       "<strong>Total a pagar:</strong> $" + totalConEnvio.toLocaleString();
   }
-}
 
   
 }
@@ -847,7 +841,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   if(zona === "santafe"){
     if(total >= 100000){
-      mensaje = "✅ Envío GRATIS en Santa Fe por superar $100.000";
+      mensaje = "🚚 Envío GRATIS en Santa Fe por superar $100.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 2000;
@@ -860,7 +854,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   } else if(zona === "santotome"){
     if(total >= 120000){
-      mensaje = "✅ Envío GRATIS en Santo Tomé por superar $120.000";
+      mensaje = "🚚 Envío GRATIS en Santo Tomé por superar $120.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 6000;
@@ -1163,7 +1157,7 @@ function actualizarListaCarrito() {
   if(listaExpandida){
     listaCarrito.style.maxHeight = "400px"; // altura expandida
     listaCarrito.style.overflowY = "auto";
-    btnDesplegarLista.innerText = "✅ Listo";
+    btnDesplegarLista.innerText = "✔ Listo";
   } else {
     listaCarrito.style.maxHeight = "150px"; // altura compacta
     listaCarrito.style.overflow = "hidden";
