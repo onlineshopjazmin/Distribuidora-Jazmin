@@ -839,75 +839,61 @@ function generarPDFProfesional(totalFinal){
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
 
-  // ---------------------
-  // Fondo rosa suave semi-transparente
-  doc.setFillColor(255, 182, 193, 50);
-  doc.rect(0,0,width,height,"F");
+  // Fondo claro sin usar alfa
+  doc.setFillColor(255, 182, 193); // rosa pastel
+  doc.rect(0,0,width,height,"F"); // relleno total
 
   // Bordes dorados
   doc.setDrawColor(212,175,55);
-  doc.setLineWidth(3);
+  doc.setLineWidth(2);
   doc.rect(5,5,width-10,height-10);
 
-  // ---------------------
-  // Logo empresa arriba a la izquierda
-  const logoSmall = "https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg";
-  const imgSmall = new Image();
-  imgSmall.src = logoSmall;
-  imgSmall.onload = function(){
-    doc.addImage(imgSmall, "PNG", 10, 10, 35, 35);
+  // Logo arriba
+  const logoURL = "https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg";
+  const img = new Image();
+  img.src = logoURL;
+  img.onload = function(){
+    doc.addImage(img, "PNG", 10, 10, 35, 35);
 
-    // ---------------------
-    // Logo grande marca de agua
-    const logoBig = "https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg";
-    const imgBig = new Image();
-    imgBig.src = logoBig;
-    imgBig.onload = function(){
-      doc.setGState(new doc.GState({opacity:0.1}));
-      doc.addImage(imgBig, "PNG", width/2 - 60, height/2 - 60, 120,120);
-      doc.setGState(new doc.GState({opacity:1}));
+    // Marca de agua (opacidad simulada)
+    doc.setTextColor(0,0,0,15); // jsPDF alfa no siempre funciona, usamos gris clarito
+    doc.setFontSize(60);
+    doc.text("Distribuidora Jazmín", width/2, height/2, {align:"center", angle:45});
+    doc.setTextColor(0,0,0); // reset color
+    doc.setFontSize(12);
 
-      // ---------------------
-      // Encabezado texto
-      doc.setFontSize(20);
-      doc.text("Distribuidora Jazmín", width/2, 25, {align: 'center'});
-      doc.setFontSize(10);
-      doc.text(FRASE_CONFIANZA, width/2, 35, {align: 'center'});
+    // Encabezado
+    doc.text("Distribuidora Jazmín", width/2, 25, {align:"center"});
+    doc.text("Calidad, compromiso y confianza en cada entrega.", width/2, 32, {align:"center"});
+    doc.text(`Fecha: ${fecha}`, 20, 45);
+    doc.text(`Dirección: ${direccion}`, 20, 53);
+    doc.text(`Forma de pago: ${formaPago}`, 20, 61);
 
-      doc.text("Fecha: " + fecha, 20, 50);
-      doc.text("Dirección: " + direccion, 20, 58);
-      doc.text("Forma de pago: " + formaPago, 20, 66);
+    // Detalle productos
+    let y = 75;
+    Object.values(carrito).forEach(p=>{
+      const precioUnit = calcularPrecioFinal(p,p.cantidad);
+      const sub = precioUnit * p.cantidad;
+      const mayorista = p.cantidad >=6 ? " (Mayorista 5%)" : "";
+      doc.text(`${p.producto}${mayorista} x${p.cantidad} - $${sub.toLocaleString()}`, 20, y);
+      y+=8;
+    });
 
-      // ---------------------
-      // Detalle de productos
-      let y = 80;
-      Object.values(carrito).forEach(p=>{
-        const precioUnit = calcularPrecioFinal(p,p.cantidad);
-        const sub = precioUnit * p.cantidad;
-        const mayorista = p.cantidad >= 6 ? " 💰 Mayorista 5%" : "";
-        doc.text(`${p.producto}${mayorista} x${p.cantidad} - $${sub.toLocaleString()}`, 20, y);
-        y += 8;
-      });
+    // Total
+    doc.setFontSize(14);
+    doc.text(`Total a pagar: $${totalFinal.toLocaleString()}`, 20, y+10);
 
-      // Total
-      doc.setFontSize(14);
-      doc.text("Total a pagar: $" + totalFinal.toLocaleString(), 20, y+10);
+    if(esSenia){
+      const saldo = totalFinal * 2 - totalFinal;
+      doc.setFontSize(11);
+      doc.text(`Saldo pendiente: $${saldo.toLocaleString()}`, 20, y+18);
+    }
 
-      if(esSenia){
-        const totalPedido = totalFinal * 2;
-        const saldo = totalPedido - totalFinal;
-        doc.setFontSize(11);
-        doc.text("Saldo pendiente: $" + saldo.toLocaleString(), 20, y+18);
-      }
+    // Footer
+    doc.setFontSize(9);
+    doc.text(`Distribuidora Jazmín - ${fecha}`, width/2, height-10, {align:"center"});
 
-      // ---------------------
-      // Footer con fecha
-      doc.setFontSize(9);
-      doc.text(`Distribuidora Jazmín - ${fecha}`, width/2, height-10, {align:'center'});
-
-      // Guardar PDF
-      doc.save("Pedido_Distribuidora_Jazmin.pdf");
-    };
+    doc.save("Pedido_Distribuidora_Jazmin.pdf");
   };
 }
 
