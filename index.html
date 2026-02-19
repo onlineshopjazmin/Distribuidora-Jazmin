@@ -1098,4 +1098,9 @@ function exportarVentas(){
 
   doc.save("Reporte_Ventas.pdf");
 }
+function toggleCarrito() {
+  const carritoDiv = document.getElementById("carrito");
+  if (!carritoDiv) return;
+  carritoDiv.classList.toggle("abierto");
+}
 </script>
