@@ -277,6 +277,34 @@ margin-top:20px;
 .controles.mayorista button{
   border:2px solid #28a745;
 }
+/* Botones de cantidad ( y ) */
+.btn-cant {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cant:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Cuando aplica descuento mayorista */
+.btn-cant.mayorista {
+  border: 2px solid #28a745;
+  background: #28a74533;
+  color: #28a745;
+}
+.cant-num.mayorista {
+  color: #28a745;
+}
 </style>
 </head>
 <body>
@@ -311,11 +339,11 @@ margin-top:20px;
         cursor:pointer;
         z-index:1100;
         ">
-📱
+
 </button>
 
 <!-- Botón flotante del carrito -->
-<button id="btnFlotante" onclick="toggleCarrito()">🛒</button>
+<button id="btnFlotante" onclick="toggleCarrito()"></button>
 
 <div id="carrito">
 <div class="barra-arrastre" onclick="toggleCarrito()"></div>
@@ -325,8 +353,8 @@ margin-top:20px;
 <div id="detallePago" style="margin-top:8px;font-weight:bold;"></div>
 <div id="envioInfo"></div>
 <select id="tipoEntrega" onchange="actualizar()">
-  <option value="domicilio">🏠 Entrega a domicilio</option>
-  <option value="coordinar_retiro">🏠 Coordinar retiro en domicilio con vendedor</option>
+<option value="domicilio">Entrega a domicilio</option>
+<option value="coordinar_retiro">Coordinar retiro en domicilio con vendedor</option>
 </select>
 <select id="zona" onchange="actualizar()">
 <option value="">Seleccionar zona</option>
@@ -340,8 +368,8 @@ margin-top:20px;
 
 <!-- Tipo de pago -->
 <select id="tipoPagoExtra" onchange="actualizar()">
-  <option value="100">💵 Pagar total</option>
-  <option value="50">🧾 Señar 50%</option>
+  <option value="100"> Pagar total</option>
+  <option value="50"> Señar 50%</option>
 </select>
 
 <!-- Botón PDF -->
@@ -349,21 +377,36 @@ margin-top:20px;
 
 <!-- Botón WhatsApp -->
 <button onclick="enviarWhatsApp()">
-📱 Confirmar por WhatsApp
+ Confirmar por WhatsApp
 </button>
 
-<hr style="margin:15px 0;border-color:#333;">
+<div id="lineaDivisora" style="position:relative; text-align:center; margin:15px 0;">
+  <hr style="border-color:#333;">
+  <button id="btnDesplegarLista" style="
+    position:absolute;
+    top:-10px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:5px 12px;
+    border:none;
+    border-radius:12px;
+    background:var(--primary);
+    color:black;
+    cursor:pointer;
+    font-weight:bold;
+  "> Mostrar productos</button>
+</div>
 
 <button onclick="pagarMercadoPago()" style="background:#009ee3;color:white;">
-💳 Pagar con Link Mercado Pago (6,42% recargo)
+ Pagar con Link Mercado Pago (6,42% recargo)
 </button>
 
 <button onclick="pagarAlias()" style="background:#00e676;color:black;">
-💰 Pagar por Alias (sin recargo)
+ Pagar por Alias (sin recargo)
 </button>
 
 <button onclick="pagarTransferencia()" style="background:#2c2c2c;color:white;">
-🪙 Transferencia CBU (sin recargo)
+ Transferencia CBU (sin recargo)
 </button>
 </div>
 </div>
@@ -549,7 +592,7 @@ async function cargarDatos(){
   }
 }
 
-function mostrar(){
+  function mostrar(){
   const cont = document.getElementById("productos");
   cont.innerHTML = "";
 
@@ -571,8 +614,16 @@ function mostrar(){
 
     // Verificar si aplica descuento mayorista
     const aplicaMayorista = cantidadEnCarrito >= 6;
+
+    // Aplicar precio con descuento si aplica mayorista
+    let precioMostrado = Number(p.precio);
+    if(aplicaMayorista){
+      precioMostrado = precioMostrado * 0.95; // 5% descuento
+    }
+
+    // Indicador visual
     const mayorista = aplicaMayorista
-      ? `<div class="indicador-mayorista">💰 Descuento mayorista 5%</div>`
+      ? `<div class="indicador-mayorista">Descuento mayorista 5%</div>`
       : "";
 
     // Agregar clase especial a los botones si aplica mayorista
@@ -583,18 +634,21 @@ function mostrar(){
     div.setAttribute("data-codigo", p.codigo);
     div.innerHTML = `
       <h4>${p.producto}</h4>
-      <div class="precio">$${precioNum.toLocaleString()}</div>
+      <div class="precio">$${precioMostrado.toLocaleString()}</div>
       ${mayorista}
       <div class="${p.estado === "SIN STOCK" ? "sin" : "disp"}">${p.estado || "DISPONIBLE"}</div>
       <div class="${controlesClass}">
-        <button onclick="cambiarCantidad('${p.codigo}',-1)">-</button>
-        <span id="cantidad-${p.codigo}">${cantidadEnCarrito}</span>
-        <button onclick="cambiarCantidad('${p.codigo}',1)">+</button>
+        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
+        <span class="cant-num ${aplicaMayorista ? 'mayorista' : ''}">${cantidadEnCarrito}</span>
+        <button class="btn-cant ${aplicaMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)"></button>
       </div>
     `;
     cont.appendChild(div);
+
+    // Actualizar indicador y precio si ya hay cantidad en carrito
+    actualizarPrecioTarjeta(p.codigo);
   });
-}
+} // FIN mostrar()
 
 function agregar(codigo){
   const producto = todos.find(p => p.codigo === codigo);
@@ -607,8 +661,10 @@ function agregar(codigo){
   }
 
   actualizar();
-  mostrar();
-  animarCarritoIcono();
+mostrar();
+actualizarPrecioTarjeta(codigo);
+animarCarritoIcono();
+}
 
   const card = document.querySelector(`[data-codigo="${codigo}"]`);
   if(card){
@@ -622,67 +678,66 @@ function agregar(codigo){
 }
 
 function actualizar(){
-  let total=0;
-  let cant=0;
+  let total = 0;
+  let cant = 0;
 
-  const lista=document.getElementById("listaCarrito");
-  lista.innerHTML="";
+  const lista = document.getElementById("listaCarrito");
+  lista.innerHTML = "";
 
-  Object.values(carrito).forEach(p=>{
-    const precioUnit = calcularPrecioFinal(p,p.cantidad);
-const sub = precioUnit * p.cantidad;
-    total+=sub;
-    cant+=p.cantidad;
+  Object.values(carrito).forEach(p => {
+    const esMayorista = p.cantidad >= 6; // Para indicar si aplica descuento
+    const precioUnit = calcularPrecioFinal(p, p.cantidad); // precio con descuento si aplica
+    const subtotal = precioUnit * p.cantidad;
 
-    lista.innerHTML+=`
-    <div class="item-carrito">
-      <span style="flex:1;">${p.producto}</span>
-      <div class="control-carrito">
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',-1)">➖</button>
-        <span class="cant-num">${p.cantidad}</span>
-        <button class="btn-cant" onclick="cambiarCantidad('${p.codigo}',1)">➕</button>
-        <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')">❌</button>
-      </div>
-    </div>`;
+    // Sumamos cantidad y total
+    cant += p.cantidad;
+    total += subtotal;
+
+    lista.innerHTML += `
+      <div class="item-carrito">
+        <span style="flex:1;">${p.producto}${esMayorista ? ' (Mayorista 5%)' : ''}</span>
+        <div class="control-carrito">
+          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',-1)"></button>
+          <span class="cant-num ${esMayorista ? 'mayorista' : ''}">${p.cantidad}</span>
+          <button class="btn-cant ${esMayorista ? 'mayorista' : ''}" onclick="cambiarCantidad('${p.codigo}',1)"></button>
+          <button class="btn-eliminar" onclick="eliminarProducto('${p.codigo}')"></button>
+        </div>
+      </div>`;
   });
 
-  document.getElementById("contador").innerText=cant;
+  // Actualizar contador
+  document.getElementById("contador").innerText = cant;
 
-  let totalFinal = total;
+  document.getElementById("detallePago").innerHTML =
+    "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago link tiene 6,42% extra.</span>";
 
-document.getElementById("detallePago").innerHTML =
-  "<span style='color:green;'>Alias y CBU sin recargo. Mercado Pago link tiene 6,42% extra.</span>";
+  const pagoElement = document.getElementById("tipoPagoExtra");
+  const tipoPago = pagoElement ? pagoElement.value : "100";
 
-const pagoElement = document.getElementById("tipoPagoExtra");
-const tipoPago = pagoElement ? pagoElement.value : "100";
+  const envio = calcularEnvio(total);
 
-const envio = calcularEnvio(total);
+  document.getElementById("envioInfo").innerHTML = envio.mensaje;
 
-document.getElementById("envioInfo").innerHTML = envio.mensaje;
+  let totalConEnvio = total;
+  if(envio.ok){
+    totalConEnvio += envio.costo;
+  }
 
-let totalConEnvio = total;
+  if(tipoPago === "50"){
+    const senia = totalConEnvio * 0.5;
+    const saldo = totalConEnvio - senia;
 
-if(envio.ok){
-  totalConEnvio += envio.costo;
-
+    document.getElementById("total").innerHTML = `
+      <strong>Total del pedido:</strong> $${totalConEnvio.toLocaleString()}<br>
+      <strong>Seña a pagar ahora:</strong> $${senia.toLocaleString()}<br>
+      <strong>Saldo pendiente:</strong> $${saldo.toLocaleString()}
+    `;
+  } else {
+    document.getElementById("total").innerHTML =
+      "<strong>Total a pagar:</strong> $" + totalConEnvio.toLocaleString();
+  }
 }
 
-if(tipoPago === "50"){
-
-  const senia = totalConEnvio * 0.5;
-  const saldo = totalConEnvio - senia;
-
-  document.getElementById("total").innerHTML = `
-    <strong>Total del pedido:</strong> $${totalConEnvio.toLocaleString()}<br>
-    <strong>Seña a pagar ahora:</strong> $${senia.toLocaleString()}<br>
-    <strong>Saldo pendiente:</strong> $${saldo.toLocaleString()}
-  `;
-
-}else{
-
-  document.getElementById("total").innerHTML =
-    "<strong>Total a pagar:</strong> $" + totalConEnvio.toLocaleString();
-}
   
 }
 function eliminarProducto(codigo){
@@ -740,7 +795,7 @@ async function init(){
 
 init();
 /* =========================
-   ⚙️ CONFIGURACIONES EXTRA
+    CONFIGURACIONES EXTRA
 ========================= */
 
 const WHATSAPP_NUMERO="543425695340";
@@ -751,7 +806,7 @@ const CBU="0000003100054608688074";
 const FRASE_CONFIANZA="Gracias por confiar en Distribuidora Jazmín. Calidad, compromiso y confianza en cada entrega.";
 
 /* =========================
-   💰 PRECIO MAYORISTA (6+ unidades)
+    PRECIO MAYORISTA (6+ unidades)
 ========================= */
 
 function calcularPrecioFinal(producto,cantidad){
@@ -763,7 +818,7 @@ function calcularPrecioFinal(producto,cantidad){
 }
 
 /* =========================
-   🚚  ENVÍO INTELIGENTE
+     ENVÍO INTELIGENTE
 ========================= */
 
 function calcularEnvio(total){
@@ -785,7 +840,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   if(zona === "santafe"){
     if(total >= 100000){
-      mensaje = "🚚 Envío GRATIS en Santa Fe por superar $100.000";
+      mensaje = " Envío GRATIS en Santa Fe por superar $100.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 2000;
@@ -798,7 +853,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 
   } else if(zona === "santotome"){
     if(total >= 120000){
-      mensaje = "🚚 Envío GRATIS en Santo Tomé por superar $120.000";
+      mensaje = " Envío GRATIS en Santo Tomé por superar $120.000";
       costoEnvio = 0;
     }else{
       costoEnvio = 6000;
@@ -814,7 +869,7 @@ const tipoEntrega = tipoEntregaElement ? tipoEntregaElement.value : "";
 }
 
 /* =========================
-   💵 OPCIÓN PAGO 50% o 100%
+    OPCIÓN PAGO 50% o 100%
 ========================= */
 
 function calcularPago(total){
@@ -826,7 +881,7 @@ function calcularPago(total){
 }
 
 /* =========================
-   📄 PDF PROFESIONAL MEJORADO
+    PDF PROFESIONAL MEJORADO
 ========================= */
 
 function generarPDFProfesional(totalFinal){
@@ -839,32 +894,35 @@ function generarPDFProfesional(totalFinal){
   const width = doc.internal.pageSize.getWidth();
   const height = doc.internal.pageSize.getHeight();
 
-  // Fondo claro sin usar alfa
+  // Fondo claro
   doc.setFillColor(255, 182, 193); // rosa pastel
-  doc.rect(0,0,width,height,"F"); // relleno total
+  doc.rect(0,0,width,height,"F");
 
   // Bordes dorados
   doc.setDrawColor(212,175,55);
   doc.setLineWidth(2);
   doc.rect(5,5,width-10,height-10);
 
-  // Logo arriba
+  // Logo como marca de agua
   const logoURL = "https://i.postimg.cc/hPRrFtWD/Jazmin-png.jpg";
   const img = new Image();
   img.src = logoURL;
   img.onload = function(){
+    
+    // Logo como marca de agua, transparente
+    doc.setGState(new doc.GState({opacity:0.1}));
+    const logoWidth = 100;
+    const logoHeight = 100;
+    doc.addImage(img, "PNG", (width - logoWidth)/2, (height - logoHeight)/2, logoWidth, logoHeight);
+    doc.setGState(new doc.GState({opacity:1}));
+
+    // Logo principal arriba
     doc.addImage(img, "PNG", 10, 10, 35, 35);
 
-    // Marca de agua (opacidad simulada)
-    doc.setTextColor(0,0,0,15); // jsPDF alfa no siempre funciona, usamos gris clarito
-    doc.setFontSize(60);
-    doc.text("Distribuidora Jazmín", width/2, height/2, {align:"center", angle:45});
-    doc.setTextColor(0,0,0); // reset color
-    doc.setFontSize(12);
-
     // Encabezado
+    doc.setFontSize(12);
+    doc.setTextColor(0,0,0);
     doc.text("Distribuidora Jazmín", width/2, 25, {align:"center"});
-    doc.text("Calidad, compromiso y confianza en cada entrega.", width/2, 32, {align:"center"});
     doc.text(`Fecha: ${fecha}`, 20, 45);
     doc.text(`Dirección: ${direccion}`, 20, 53);
     doc.text(`Forma de pago: ${formaPago}`, 20, 61);
@@ -889,6 +947,10 @@ function generarPDFProfesional(totalFinal){
       doc.text(`Saldo pendiente: $${saldo.toLocaleString()}`, 20, y+18);
     }
 
+    // Frase de confianza al final de la hoja, centrada horizontalmente
+    doc.setFontSize(12);
+    doc.text("Calidad, compromiso y confianza en cada entrega.", width/2, height - 50, {align:"center"});
+
     // Footer
     doc.setFontSize(9);
     doc.text(`Distribuidora Jazmín - ${fecha}`, width/2, height-10, {align:"center"});
@@ -898,7 +960,7 @@ function generarPDFProfesional(totalFinal){
 }
 
 /* =========================
-   📱 WHATSAPP CONFIRMACIÓN
+    WHATSAPP CONFIRMACIÓN
 ========================= */
 
 function enviarWhatsApp(){
@@ -929,7 +991,7 @@ function enviarWhatsApp(){
   const esSenia = tipoPago === "50";
   const totalFinal = esSenia ? totalConEnvio * 0.5 : totalConEnvio;
 
-  let mensaje = "Hola Distribuidora Jazmín 👋\n\nQuiero confirmar el siguiente pedido:\n\n";
+  let mensaje = "Hola Distribuidora Jazmín,\n\nQuiero confirmar el siguiente pedido:\n\n";
   Object.values(carrito).forEach(p => {
     mensaje += `- ${p.producto} x${p.cantidad}\n`;
   });
@@ -939,14 +1001,14 @@ function enviarWhatsApp(){
     mensaje += `\nSeña 50%: $${totalFinal.toLocaleString()}`;
     mensaje += `\nSaldo pendiente: $${(totalConEnvio - totalFinal).toLocaleString()}`;
   }
-  mensaje += "\n\nGracias 🙌";
+  mensaje += "\n\nGracias por su compra!";
 
   window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`, "_blank");
 }
 
 
 /* =========================
-   💳 MERCADO PAGO CON RECARGO
+    MERCADO PAGO CON RECARGO
 ========================= */
 
 function pagarConMP(total){
@@ -957,7 +1019,7 @@ function pagarConMP(total){
 
 
 /* =========================
-   💳 AGREGAR SELECT PAGO DINÁMICO
+    AGREGAR SELECT PAGO DINÁMICO
 ========================= */
 
 
@@ -975,7 +1037,6 @@ function cambiarCantidad(codigo, cambio){
   const producto = todos.find(p => p.codigo === codigo);
   if(!producto) return;
 
-  // Bloquear si el producto está SIN STOCK
   if(producto.estado === "SIN STOCK" && cambio > 0){
     alert(`El producto "${producto.producto}" está SIN STOCK`);
     return;
@@ -987,7 +1048,6 @@ function cambiarCantidad(codigo, cambio){
     }
   } else {
     carrito[codigo].cantidad += cambio;
-
     if(carrito[codigo].cantidad <= 0){
       delete carrito[codigo];
     }
@@ -995,10 +1055,11 @@ function cambiarCantidad(codigo, cambio){
 
   actualizar();
   mostrar();
+  actualizarPrecioTarjeta(codigo); // <--- llamada para actualizar la tarjeta visualmente
 }
 
 /* =========================
-   🔐 PANEL ADMIN FUNCIONAL
+    PANEL ADMIN FUNCIONAL
 ========================= */
 
 function accesoAdmin(){
@@ -1084,9 +1145,98 @@ function exportarVentas(){
 
   doc.save("Reporte_Ventas.pdf");
 }
+
+const btnDesplegarLista = document.getElementById("btnDesplegarLista");
+const listaCarrito = document.getElementById("listaCarrito");
+
+let listaExpandida = false;
+
+// Función para actualizar altura de lista y texto del botón
+function actualizarListaCarrito() {
+  if(listaExpandida){
+    listaCarrito.style.maxHeight = "400px"; // altura expandida
+    listaCarrito.style.overflowY = "auto";
+    btnDesplegarLista.innerText = " Listo";
+  } else {
+    listaCarrito.style.maxHeight = "150px"; // altura compacta
+    listaCarrito.style.overflow = "hidden";
+    btnDesplegarLista.innerText = " Mostrar productos";
+  }
+}
+
+// Inicializa con lista colapsada hasta que se abra el carrito
+actualizarListaCarrito();
+
+// Click para alternar
+btnDesplegarLista.addEventListener("click", () => {
+  listaExpandida = !listaExpandida;
+  actualizarListaCarrito();
+  
+  // Asegurarse que la sección de pago esté visible al cerrar
+  if(!listaExpandida){
+  document.getElementById("carrito").scrollIntoView({behavior:"smooth", block:"end"});
+}
+});
+
+// Expandir automáticamente al abrir carrito
 function toggleCarrito() {
   const carritoDiv = document.getElementById("carrito");
   if (!carritoDiv) return;
   carritoDiv.classList.toggle("abierto");
+
+  if(carritoDiv.classList.contains("abierto") && !listaExpandida){
+    listaExpandida = true;
+    actualizarListaCarrito();
+  }
 }
+// Actualiza el precio y estilo de la tarjeta según la cantidad en carrito
+function actualizarPrecioTarjeta(codigo){
+  const card = document.querySelector(`[data-codigo="${codigo}"]`);
+  if(!card) return;
+
+  const producto = todos.find(p => p.codigo === codigo);
+  if(!producto) return;
+
+  const cantidadEnCarrito = carrito[codigo]?.cantidad || 0;
+
+  // Verificar descuento mayorista
+  const aplicaMayorista = cantidadEnCarrito >= 6;
+  let precioMostrado = Number(producto.precio);
+  if(aplicaMayorista){
+    precioMostrado = precioMostrado * 0.95; // 5% descuento
+  }
+
+  // Actualizar precio en la tarjeta
+  const precioDiv = card.querySelector(".precio");
+  if(precioDiv) precioDiv.innerText = `$${precioMostrado.toLocaleString()}`;
+
+  // Mostrar u ocultar indicador mayorista
+  let indicador = card.querySelector(".indicador-mayorista");
+  if(aplicaMayorista){
+    if(!indicador){
+      indicador = document.createElement("div");
+      indicador.className = "indicador-mayorista";
+      indicador.innerText = "Descuento mayorista 5%";
+      card.appendChild(indicador);
+    }
+  } else if(indicador){
+    indicador.remove();
+  }
+
+  // Actualizar clases de botones y cantidad
+  const controles = card.querySelectorAll(".btn-cant, .cant-num");
+  controles.forEach(el => {
+    if(aplicaMayorista){
+      el.classList.add("mayorista");
+    } else {
+      el.classList.remove("mayorista");
+    }
+  });
+
+  // Actualizar cantidad en la tarjeta
+  const cantSpan = card.querySelector(".cant-num");
+  if(cantSpan) cantSpan.innerText = cantidadEnCarrito;
+}
+
+
 </script>
