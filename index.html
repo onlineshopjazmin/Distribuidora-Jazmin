@@ -314,10 +314,6 @@ margin-top:20px;
 <div id="contador">0</div>
 </header>
 
-<nav>
-<button id="btnBebidas" class="activo">Bebidas</button>
-<button id="btnAlmacen">Almacén</button>
-</nav>
 
 <input type="text" id="buscador" placeholder="Buscar producto...">
 <div class="productos" id="productos"></div>
@@ -546,8 +542,7 @@ const { jsPDF } = window.jspdf;
 const PASSWORD="Jazmin2026Admin";
 const SHEET_URL="1ulQgsiH4VPgtws9Abo8wGo4xcwWHVi-hEkeKUqUbRWE";
 
-let productosBebidas=[];
-let productosAlmacen=[];
+
 let productos=[];
 let todos=[];
 let carrito={};
@@ -558,34 +553,38 @@ const MINIMO_SANTO_TOME=120000;
 async function cargarDatos(){
   try{
 
-    const urlBebidas=`https://opensheet.elk.sh/${SHEET_URL}/bebidas`;
-    const urlAlmacen=`https://opensheet.elk.sh/${SHEET_URL}/almacen`;
+    const url = `https://opensheet.elk.sh/${SHEET_URL}/producto`;
+    const response = await fetch(url);
 
-    const [rB,rA]=await Promise.all([
-      fetch(urlBebidas),
-      fetch(urlAlmacen)
-    ]);
+    todos = await response.json();
+    console.log(todos);
 
-    productosBebidas = await rB.json();
-    productosAlmacen = await rA.json();
+    // Limpiar espacios y asegurar formato correcto
+    todos.forEach(p => {
 
-    //  LIMPIAR ESPACIOS EN CODIGOS (MUY IMPORTANTE)
-    productosBebidas.forEach(p=>{
-      if(p.codigo){
-        p.codigo = p.codigo.trim();
-      }
-    });
+  if(p.id){
+    // Extraer solo números del ID
+    const numero = p.id.replace(/\D/g, '');
+    p.codigo = numero;
+  }
 
-    productosAlmacen.forEach(p=>{
-      if(p.codigo){
-        p.codigo = p.codigo.trim();
-      }
-    });
+  if(p.producto){
+    p.producto = String(p.producto).trim();
+  }
 
-    // Si después unís todo en un array general:
-    todos = [...productosBebidas, ...productosAlmacen];
+  // Quitar $ y comas del precio
+  if(p.precio){
+    p.precio = Number(p.precio.replace(/[$,]/g, '')) || 0;
+  } else {
+    p.precio = 0;
+  }
 
-    mostrar(); // o la función que uses para pintar productos
+  if(!p.estado){
+    p.estado = "DISPONIBLE";
+  }
+});
+    productos = todos; // ahora usamos solo una lista
+    mostrar();
 
   }catch(error){
     console.error("Error cargando datos:", error);
@@ -597,7 +596,7 @@ async function cargarDatos(){
   cont.innerHTML = "";
 
   const filtro = document.getElementById("buscador").value.toLowerCase();
-  let base = productos.length ? productos : todos;
+  let base = todos;
 
   let lista = filtro
     ? todos.filter(p => p.producto?.toLowerCase().includes(filtro))
@@ -771,23 +770,6 @@ document.getElementById("buscador").addEventListener("input", () => {
   clearTimeout(timer);
   timer = setTimeout(mostrar, 300);
 });
-
-const btnBebidas = document.getElementById("btnBebidas");
-const btnAlmacen = document.getElementById("btnAlmacen");
-
-btnBebidas.onclick=()=>{
-  productos=productosBebidas;
-  btnBebidas.classList.add("activo");
-  btnAlmacen.classList.remove("activo");
-  mostrar();
-};
-
-btnAlmacen.onclick=()=>{
-  productos=productosAlmacen;
-  btnAlmacen.classList.add("activo");
-  btnBebidas.classList.remove("activo");
-  mostrar();
-};
 
 async function init(){
   await cargarDatos();
@@ -1086,7 +1068,8 @@ function actualizarAdmin(){
 
   Object.values(carrito).forEach(p=>{
     totalItems += p.cantidad;
-    totalFacturacion += Number(p.precio) * p.cantidad;
+   const precioFinal = calcularPrecioFinal(p,p.cantidad);
+totalFacturacion += precioFinal * p.cantidad;
   });
 
   document.getElementById("adminItems").innerText = totalItems;
